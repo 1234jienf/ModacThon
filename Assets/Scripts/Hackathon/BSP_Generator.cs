@@ -70,6 +70,8 @@ public class BSP_Generator : MonoBehaviour
             return;
         }
         GenerateBridgeMaps();
+        PathProcessor pathProcessor = GetComponent<PathProcessor>();
+        pathProcessor.ProcessRoomPaths();
     }
 
     private void GenerateBridgeMaps()
@@ -313,32 +315,65 @@ public class BSP_Generator : MonoBehaviour
 
         if (drawCorridorLines)
         {
-            // 인게임 에디터 기즈모/라인 두께도 3칸 느낌에 맞춰 살짝 확장 조정
             DrawLine(new Vector2(start.x, start.y), new Vector2(end.x, start.y), Color.yellow, 0.18f);
             DrawLine(new Vector2(end.x, start.y), new Vector2(end.x, end.y), Color.yellow, 0.18f);
         }
 
-        // 가로축 이동 시 기준선을 포함해 아래/위 총 3칸(offset: -1, 0, 1) 파내기
+        // 복도 경로 주변에 이미 복도(P)가 있는지 확인하는 함수
+        // 복도가 나란히 붙지 않도록 감지합니다.
+        bool IsPathBlocked(int x, int y, int dx, int dy) 
+        {
+            // 현재 뚫으려는 타일 주변(2칸 범위)에 이미 P가 있다면 복도 침범으로 간주
+            for (int i = -1; i <= 1; i++)
+            {
+                for (int j = -1; j <= 1; j++)
+                {
+                    int ny = y + i;
+                    int nx = x + j;
+                    if (ny >= 0 && ny < h && nx >= 0 && nx < w && grid[ny, nx] == 'P')
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        // 1. 가로축 파내기 (Y축 기준선을 유지하되, 막히면 옆으로 비켜감)
         int minX = Mathf.Min(gridStartX, gridEndX);
         int maxX = Mathf.Max(gridStartX, gridEndX);
+        int currentY = gridStartY;
+
+        // 경로가 막혔는지 확인 후 필요한 경우 축 이동
+        if (IsPathBlocked(gridStartX, currentY, 1, 0)) currentY += (currentY < h - 2) ? 1 : -1;
+
         for (int x = minX; x <= maxX; x++)
         {
             for (int offset = -1; offset <= 1; offset++)
             {
-                int ty = gridStartY + offset;
-                if (x >= 0 && x < w && ty >= 0 && ty < h) grid[ty, x] = '.';
+                int ty = currentY + offset;
+                if (x >= 0 && x < w && ty >= 0 && ty < h && grid[ty, x] == '#')
+                {
+                    grid[ty, x] = 'P';
+                }
             }
         }
 
-        // 세로축 이동 시 기준선을 포함해 좌/우 총 3칸(offset: -1, 0, 1) 파내기
+        // 2. 세로축 파내기 (X축 기준선을 유지하되, 막히면 옆으로 비켜감)
         int minY = Mathf.Min(gridStartY, gridEndY);
         int maxY = Mathf.Max(gridStartY, gridEndY);
+        int currentX = gridEndX;
+
+        // 경로가 막혔는지 확인 후 필요한 경우 축 이동
+        if (IsPathBlocked(currentX, gridEndY, 0, 1)) currentX += (currentX < w - 2) ? 1 : -1;
+
         for (int y = minY; y <= maxY; y++)
         {
-            for (int offset = 0; offset <= 1; offset++)
+            for (int offset = -1; offset <= 1; offset++)
             {
-                int tx = gridEndX + offset;
-                if (tx >= 0 && tx < w && y >= 0 && y < h) grid[y, tx] = '.';
+                int tx = currentX + offset;
+                if (tx >= 0 && tx < w && y >= 0 && y < h && grid[y, tx] == '#')
+                {
+                    grid[y, tx] = 'P';
+                }
             }
         }
     }
