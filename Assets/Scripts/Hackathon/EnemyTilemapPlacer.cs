@@ -33,7 +33,15 @@ public class EnemyTilemapPlacer : MonoBehaviour
     public float dirtTilePlacementWeight = 2.0f;
     public float nearDirtGroundBonus = 1.25f;
     [Range(0f, 1f)] public float mapBDifficultyWeight = 0.75f;
+    public float enemyRoamRadius = 2.2f;
     public Vector3 spawnOffset = new Vector3(0f, 0f, -0.1f);
+
+    public void ApplyDifficultySettings(BridgeDifficultyPreset preset)
+    {
+        enemyCount = preset.enemyCount;
+        mapBDifficultyWeight = preset.mapBDifficultyWeight;
+        enemyRoamRadius = preset.enemyRoamRadius;
+    }
 
     [Header("Sprites")]
     public string spriteRootFolder = "Assets/Sprites";
@@ -42,18 +50,23 @@ public class EnemyTilemapPlacer : MonoBehaviour
     public string sortingLayerName = "Default";
     public List<EnemyDefinition> enemies = new List<EnemyDefinition>
     {
-        new EnemyDefinition { enemyName = "Bird 2", minDifficulty = 0f, pixelsPerUnit = 32f },
-        new EnemyDefinition { enemyName = "Rat", minDifficulty = 0.30f, pixelsPerUnit = 32f },
-        new EnemyDefinition { enemyName = "Cat", minDifficulty = 0.60f, pixelsPerUnit = 32f },
-        new EnemyDefinition { enemyName = "Dog", minDifficulty = 0.82f, pixelsPerUnit = 32f }
+        new EnemyDefinition { enemyName = "Bird 2", minDifficulty = 0f, pixelsPerUnit = 32f, minSpeed = 0.55f, maxSpeed = 1.1f, moveTime = 2f, restTime = 1f },
+        new EnemyDefinition { enemyName = "Rat", minDifficulty = 0.30f, pixelsPerUnit = 32f, minSpeed = 0.4f, maxSpeed = 0.85f, moveTime = 2.5f, restTime = 1.2f },
+        new EnemyDefinition { enemyName = "Cat", minDifficulty = 0.60f, pixelsPerUnit = 32f, minSpeed = 0.35f, maxSpeed = 0.75f, moveTime = 3f, restTime = 1.5f },
+        new EnemyDefinition { enemyName = "Dog", minDifficulty = 0.82f, pixelsPerUnit = 32f, minSpeed = 0.3f, maxSpeed = 0.65f, moveTime = 3.5f, restTime = 1.8f }
     };
 
     private const string EnemyRootName = "Generated Enemies";
 
     private void Start()
     {
-        if (placeOnStart)
-            StartCoroutine(PlaceEnemiesAfterTilemapRender());
+        if (!placeOnStart)
+            return;
+
+        if (BridgeGameSession.Instance != null)
+            return;
+
+        StartCoroutine(PlaceEnemiesAfterTilemapRender());
     }
 
     private IEnumerator PlaceEnemiesAfterTilemapRender()
@@ -319,6 +332,13 @@ public class EnemyTilemapPlacer : MonoBehaviour
         TilemapEnemyAnimator animator = enemyObject.AddComponent<TilemapEnemyAnimator>();
         animator.frames = frames;
         animator.framesPerSecond = animationFps;
+
+        TilemapEnemyRoam roam = enemyObject.AddComponent<TilemapEnemyRoam>();
+        roam.Configure(enemy.minSpeed, enemy.maxSpeed, enemy.moveTime, enemy.restTime, enemy.startDelayMax);
+
+        TilemapEnemyWalkBounds walkBounds = enemyObject.AddComponent<TilemapEnemyWalkBounds>();
+        walkBounds.Configure(reference, groundTilemap, dirtTilemap, wallTilemap, lakeTilemap, cell, enemyRoamRadius);
+        roam.BindWalkBounds(walkBounds);
     }
 
     private Sprite[] LoadWalkFrames(EnemyDefinition enemy)
@@ -495,6 +515,11 @@ public class EnemyDefinition
     public string enemyName;
     [Range(0f, 1f)] public float minDifficulty;
     public float pixelsPerUnit = 32f;
+    public float minSpeed = 0.35f;
+    public float maxSpeed = 0.85f;
+    public float moveTime = 2.5f;
+    public float restTime = 1.5f;
+    public float startDelayMax = 1.5f;
     public Sprite[] walkFrames;
 }
 
@@ -502,6 +527,7 @@ public class TilemapEnemyAnimator : MonoBehaviour
 {
     public Sprite[] frames;
     public float framesPerSecond = 6f;
+    public bool isMoving = true;
 
     private SpriteRenderer _spriteRenderer;
     private float _timer;
@@ -514,7 +540,7 @@ public class TilemapEnemyAnimator : MonoBehaviour
 
     private void Update()
     {
-        if (_spriteRenderer == null || frames == null || frames.Length <= 1 || framesPerSecond <= 0f)
+        if (!isMoving || _spriteRenderer == null || frames == null || frames.Length <= 1 || framesPerSecond <= 0f)
             return;
 
         _timer += Time.deltaTime;

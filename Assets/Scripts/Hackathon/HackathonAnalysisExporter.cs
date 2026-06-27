@@ -59,10 +59,21 @@ public class HackathonAnalysisExporter : MonoBehaviour
 
     private void Start()
     {
-        if (exportOnStart)
-        {
+        if (!exportOnStart)
+            return;
+
+        if (BridgeGameSession.Instance != null)
+            StartCoroutine(ExportAfterSessionStarts());
+        else
             ExportAndMaybeAnalyze();
-        }
+    }
+
+    private System.Collections.IEnumerator ExportAfterSessionStarts()
+    {
+        while (BridgeGameSession.Instance != null && !BridgeGameSession.Instance.IsStarted)
+            yield return null;
+
+        ExportAndMaybeAnalyze();
     }
 
     [ContextMenu("Export And Analyze")]

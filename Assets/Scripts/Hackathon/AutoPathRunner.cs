@@ -35,6 +35,29 @@ public class PathRunReport
     public string report_json_path;
     public string report_csv_path;
     public string failure_reason;
+
+    public bool has_baseline_comparison;
+    public int baseline_total_tile_steps;
+    public float baseline_world_distance;
+    public float baseline_estimated_seconds;
+    public float elapsed_delta_seconds;
+    public float distance_delta;
+    public int replan_count;
+    public int enemy_count;
+    public int difficulty_level;
+}
+
+[Serializable]
+public struct PathRunLiveStats
+{
+    public bool isRunning;
+    public int difficultyLevel;
+    public float elapsedSeconds;
+    public float actualRouteDistance;
+    public float baselineRouteDistance;
+    public float baselineEstimatedSeconds;
+    public int replanCount;
+    public int enemyCount;
 }
 
 public class AutoPathRunner : MonoBehaviour
@@ -79,9 +102,24 @@ public class AutoPathRunner : MonoBehaviour
     public bool avoidGeneratedEnemies = true;
     public Transform enemyRoot;
     public string generatedEnemiesRootName = "Generated Enemies";
+    [Tooltip("Play 직후 EnemyTilemapPlacer가 적을 깔 때까지 A* 시작을 잠깐 대기")]
+    public bool waitForGeneratedEnemies = true;
+    public float enemySpawnWaitTimeout = 2f;
     public int enemyBlockedRadius = 0;
     public int enemyAvoidanceRadius = 1;
     public float enemyAvoidanceCost = 25f;
+    [Tooltip("이동 중 몬스터 위치가 바뀌면 주기적으로 A* 재계산")]
+    public bool replanPathDuringRun = true;
+    public float replanInterval = 0.75f;
+
+    [Header("Path Visualization")]
+    public bool showPathLines = true;
+    public Color baselinePathColor = new Color(1f, 0.15f, 0.15f, 0.95f);
+    public Color dynamicPathColor = new Color(0.2f, 0.75f, 1f, 0.95f);
+    public float pathLineWidth = 0.12f;
+    public int pathLineSortingOrder = 5000;
+    public string pathLineSortingLayer = "Default";
+    public float pathLineZOffset = 0f;
 
     [Header("Output")]
     public bool exportReport = true;
@@ -89,6 +127,7 @@ public class AutoPathRunner : MonoBehaviour
 
     [Header("Latest Result")]
     public PathRunReport latestReport;
+    public PathRunLiveStats liveStats;
 
     public bool IsRunning => _runCoroutine != null;
 
@@ -97,6 +136,13 @@ public class AutoPathRunner : MonoBehaviour
     private Player _player;
     private Animator _animator;
     private bool _playerWasEnabled;
+    private LineRenderer _baselinePathLine;
+    private LineRenderer _dynamicPathLine;
+    private Transform _pathLineRoot;
+    private float _liveBaselineDistance;
+    private float _liveBaselineEstimatedSeconds;
+    private int _liveEnemyCount;
+    private int _liveReplanCount;
 
     private void Awake()
     {
@@ -108,6 +154,9 @@ public class AutoPathRunner : MonoBehaviour
             runnerTransform = transform;
             autoCreateRunner = false;
         }
+
+        if (GetComponent<PathRunStatsUI>() == null)
+            gameObject.AddComponent<PathRunStatsUI>();
     }
 
     private void Start()
@@ -167,6 +216,7 @@ public class AutoPathRunner : MonoBehaviour
 
         SetWalkingAnimation(false);
         RestorePlayerControl();
+        SetPathLinesVisible(false);
     }
 
     private void EnsureRunnerTransform()
@@ -225,6 +275,8 @@ public class AutoPathRunner : MonoBehaviour
             if (exportReport)
             {
                 ExportReport(report);
+                BridgeDifficultyResultsTracker.Record(report);
+                BridgeDifficultyResultsTracker.Export(outputRoot);
             }
 
             if (!loopRun)
@@ -350,16 +402,34 @@ public class AutoPathRunner : MonoBehaviour
             $"AutoPathRunner [{mapId}]: bridge start=({start.x},{start.y}) goal=({goal.x},{goal.y}) " +
             $"world=({bridgeData.startX},{bridgeData.startY}) size={bridgeData.width}x{bridgeData.height}");
 
-        HashSet<Vector2Int> blockedCells;
-        Dictionary<Vector2Int, float> extraCosts;
-        BuildBridgeEnemyAvoidance(bridgeData, pathMatrix, start, goal, out blockedCells, out extraCosts);
+        List<Vector2Int> baselinePath = ComputeBridgePath(bridgeData, pathMatrix, start, goal, useEnemyAvoidance: false);
+        if (baselinePath == null || baselinePath.Count == 0)
+        {
+            latestReport = BuildFailureReport("Baseline bridge path(P only)를 찾지 못했습니다.");
+            yield break;
+        }
 
-        List<Vector2Int> path = FindPathAStar(pathMatrix, start, goal, true, false, pathTileCost, grassTileCost, blockedCells, extraCosts);
+        float baselineWorldDistance = MeasureBridgePathWorldDistance(bridgeData, baselinePath);
+        float baselineEstimatedSeconds = moveSpeed > 0f ? baselineWorldDistance / moveSpeed : 0f;
+        _liveBaselineDistance = baselineWorldDistance;
+        _liveBaselineEstimatedSeconds = baselineEstimatedSeconds;
+        UpdatePathLine(GetBaselinePathLine(), bridgeData, baselinePath);
+
+        if (waitForGeneratedEnemies && avoidGeneratedEnemies)
+            yield return WaitForGeneratedEnemies();
+
+        int enemyCount = CountGeneratedEnemies();
+        _liveEnemyCount = enemyCount;
+        _liveReplanCount = 0;
+        List<Vector2Int> path = ComputeBridgePath(bridgeData, pathMatrix, start, goal, useEnemyAvoidance: true);
         if (path == null || path.Count == 0)
         {
             latestReport = BuildFailureReport("Bridge map A→B path(P)가 끊겨 있습니다. PathProcessor 결과를 확인하세요.");
             yield break;
         }
+
+        UpdatePathLine(GetDynamicPathLine(), bridgeData, path);
+        SetPathLinesVisible(showPathLines);
 
         runnerTransform.position = BridgeMapJsonUtility.GridCellToWorld(bridgeData, path[0].x, path[0].y);
 
@@ -368,10 +438,22 @@ public class AutoPathRunner : MonoBehaviour
         int pathSteps = 0;
         int groundSteps = 0;
         int otherSteps = 0;
+        float replanTimer = 0f;
+        int pathIndex = 1;
+        int replanCount = 0;
 
-        for (int i = 1; i < path.Count; i++)
+        liveStats = new PathRunLiveStats
         {
-            Vector2Int cell = path[i];
+            isRunning = true,
+            difficultyLevel = BridgeDifficultyController.Instance != null ? BridgeDifficultyController.Instance.DifficultyLevel : 0,
+            baselineRouteDistance = baselineWorldDistance,
+            baselineEstimatedSeconds = baselineEstimatedSeconds,
+            enemyCount = enemyCount
+        };
+
+        while (pathIndex < path.Count)
+        {
+            Vector2Int cell = path[pathIndex];
             char marker = pathMatrix[cell.y, cell.x];
             CountBridgeMarker(marker, ref pathSteps, ref groundSteps, ref otherSteps);
 
@@ -385,16 +467,50 @@ public class AutoPathRunner : MonoBehaviour
                 float step = moveSpeed * Time.deltaTime;
                 runnerTransform.position = Vector3.MoveTowards(runnerTransform.position, target, step);
                 elapsed += Time.deltaTime;
+                replanTimer += Time.deltaTime;
+                liveStats = new PathRunLiveStats
+                {
+                    isRunning = true,
+                    difficultyLevel = BridgeDifficultyController.Instance != null ? BridgeDifficultyController.Instance.DifficultyLevel : 0,
+                    elapsedSeconds = elapsed,
+                    actualRouteDistance = worldDistance + Vector3.Distance(runnerTransform.position, target),
+                    baselineRouteDistance = _liveBaselineDistance,
+                    baselineEstimatedSeconds = _liveBaselineEstimatedSeconds,
+                    replanCount = _liveReplanCount,
+                    enemyCount = _liveEnemyCount
+                };
+
+                if (replanPathDuringRun && avoidGeneratedEnemies && replanTimer >= replanInterval)
+                {
+                    replanTimer = 0f;
+                    Vector2Int currentCell = WorldToBridgeCell(bridgeData, runnerTransform.position);
+                    List<Vector2Int> newPath = ComputeBridgePath(bridgeData, pathMatrix, currentCell, goal, useEnemyAvoidance: true);
+                    if (newPath != null && newPath.Count > 1)
+                    {
+                        path = newPath;
+                        pathIndex = 1;
+                        replanCount++;
+                        _liveReplanCount = replanCount;
+                        UpdatePathLine(GetDynamicPathLine(), bridgeData, path);
+                        cell = path[pathIndex];
+                        target = BridgeMapJsonUtility.GridCellToWorld(bridgeData, cell.x, cell.y);
+                        UpdateFacing(target - runnerTransform.position);
+                    }
+                }
+
                 yield return null;
             }
 
             runnerTransform.position = target;
             worldDistance += Vector3.Distance(previous, target);
+            pathIndex++;
         }
 
         SetWalkingAnimation(false);
+        liveStats = new PathRunLiveStats { isRunning = false };
 
         int totalSteps = Mathf.Max(1, path.Count - 1);
+        int difficultyLevel = BridgeDifficultyController.Instance != null ? BridgeDifficultyController.Instance.DifficultyLevel : 0;
         latestReport = new PathRunReport
         {
             map_id = mapId,
@@ -406,7 +522,16 @@ public class AutoPathRunner : MonoBehaviour
             ground_tile_steps = groundSteps,
             other_tile_steps = otherSteps,
             total_tile_steps = totalSteps,
-            average_speed = elapsed > 0f ? worldDistance / elapsed : 0f
+            average_speed = elapsed > 0f ? worldDistance / elapsed : 0f,
+            has_baseline_comparison = true,
+            baseline_total_tile_steps = Mathf.Max(0, baselinePath.Count - 1),
+            baseline_world_distance = baselineWorldDistance,
+            baseline_estimated_seconds = baselineEstimatedSeconds,
+            elapsed_delta_seconds = elapsed - baselineEstimatedSeconds,
+            distance_delta = worldDistance - baselineWorldDistance,
+            replan_count = replanCount,
+            enemy_count = enemyCount,
+            difficulty_level = difficultyLevel
         };
     }
 
@@ -425,6 +550,168 @@ public class AutoPathRunner : MonoBehaviour
         }
 
         otherSteps++;
+    }
+
+    private List<Vector2Int> ComputeBridgePath(
+        InputMapData bridgeData,
+        char[,] matrix,
+        Vector2Int start,
+        Vector2Int goal,
+        bool useEnemyAvoidance)
+    {
+        HashSet<Vector2Int> blockedCells;
+        Dictionary<Vector2Int, float> extraCosts;
+        if (useEnemyAvoidance && avoidGeneratedEnemies)
+            BuildBridgeEnemyAvoidance(bridgeData, matrix, start, goal, out blockedCells, out extraCosts);
+        else
+        {
+            blockedCells = new HashSet<Vector2Int>();
+            extraCosts = new Dictionary<Vector2Int, float>();
+        }
+
+        return FindPathAStar(matrix, start, goal, true, false, pathTileCost, grassTileCost, blockedCells, extraCosts);
+    }
+
+    private static float MeasureBridgePathWorldDistance(InputMapData bridgeData, List<Vector2Int> path)
+    {
+        if (path == null || path.Count <= 1)
+            return 0f;
+
+        float distance = 0f;
+        for (int i = 1; i < path.Count; i++)
+        {
+            Vector3 previous = BridgeMapJsonUtility.GridCellToWorld(bridgeData, path[i - 1].x, path[i - 1].y);
+            Vector3 current = BridgeMapJsonUtility.GridCellToWorld(bridgeData, path[i].x, path[i].y);
+            distance += Vector3.Distance(previous, current);
+        }
+
+        return distance;
+    }
+
+    private int CountGeneratedEnemies()
+    {
+        int count = 0;
+        foreach (Transform _ in GetEnemyTransforms())
+            count++;
+        return count;
+    }
+
+    private void EnsurePathLineRenderers()
+    {
+        if (_baselinePathLine == null)
+            _baselinePathLine = CreatePathLineRenderer("BaselinePathLine", baselinePathColor);
+        if (_dynamicPathLine == null)
+            _dynamicPathLine = CreatePathLineRenderer("DynamicPathLine", dynamicPathColor);
+    }
+
+    private LineRenderer GetBaselinePathLine()
+    {
+        EnsurePathLineRenderers();
+        return _baselinePathLine;
+    }
+
+    private LineRenderer GetDynamicPathLine()
+    {
+        EnsurePathLineRenderers();
+        return _dynamicPathLine;
+    }
+
+    private Transform GetPathLineRoot()
+    {
+        if (_pathLineRoot != null)
+            return _pathLineRoot;
+
+        GameObject existing = GameObject.Find("BridgePathLines");
+        if (existing == null)
+            existing = new GameObject("BridgePathLines");
+
+        _pathLineRoot = existing.transform;
+        return _pathLineRoot;
+    }
+
+    private LineRenderer CreatePathLineRenderer(string objectName, Color color)
+    {
+        Transform root = GetPathLineRoot();
+        Transform existing = root.Find(objectName);
+        GameObject lineObject = existing != null ? existing.gameObject : new GameObject(objectName);
+        if (existing == null)
+            lineObject.transform.SetParent(root, false);
+
+        LineRenderer lineRenderer = lineObject.GetComponent<LineRenderer>();
+        if (lineRenderer == null)
+            lineRenderer = lineObject.AddComponent<LineRenderer>();
+
+        lineRenderer.useWorldSpace = true;
+        lineRenderer.loop = false;
+        lineRenderer.numCapVertices = 4;
+        lineRenderer.numCornerVertices = 4;
+        lineRenderer.startWidth = pathLineWidth;
+        lineRenderer.endWidth = pathLineWidth;
+        lineRenderer.startColor = color;
+        lineRenderer.endColor = color;
+        lineRenderer.sortingOrder = pathLineSortingOrder;
+        lineRenderer.sortingLayerName = pathLineSortingLayer;
+        lineRenderer.alignment = LineAlignment.TransformZ;
+        lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        lineRenderer.receiveShadows = false;
+
+        Shader shader = Shader.Find("Sprites/Default");
+        if (shader == null)
+            shader = Shader.Find("Unlit/Color");
+        lineRenderer.material = new Material(shader);
+        lineRenderer.textureMode = LineTextureMode.Stretch;
+        lineRenderer.enabled = false;
+        return lineRenderer;
+    }
+
+    private void UpdatePathLine(LineRenderer lineRenderer, InputMapData bridgeData, List<Vector2Int> gridPath)
+    {
+        EnsurePathLineRenderers();
+        if (lineRenderer == null || gridPath == null || gridPath.Count == 0)
+            return;
+
+        lineRenderer.positionCount = gridPath.Count;
+        for (int i = 0; i < gridPath.Count; i++)
+        {
+            Vector3 world = BridgeMapJsonUtility.GridCellToWorld(bridgeData, gridPath[i].x, gridPath[i].y);
+            world.z += pathLineZOffset;
+            lineRenderer.SetPosition(i, world);
+        }
+    }
+
+    private void SetPathLinesVisible(bool visible)
+    {
+        EnsurePathLineRenderers();
+        if (_baselinePathLine != null)
+            _baselinePathLine.enabled = visible && showPathLines;
+        if (_dynamicPathLine != null)
+            _dynamicPathLine.enabled = visible && showPathLines;
+    }
+
+    private static Vector2Int WorldToBridgeCell(InputMapData bridgeData, Vector3 worldPosition)
+    {
+        return new Vector2Int(
+            Mathf.FloorToInt(worldPosition.x - bridgeData.startX),
+            Mathf.FloorToInt(worldPosition.y - bridgeData.startY));
+    }
+
+    private IEnumerator WaitForGeneratedEnemies()
+    {
+        float elapsed = 0f;
+        while (elapsed < enemySpawnWaitTimeout)
+        {
+            Transform root = enemyRoot != null ? enemyRoot : FindGeneratedEnemiesRoot();
+            if (root != null && root.childCount > 0)
+            {
+                Debug.Log($"AutoPathRunner [{mapId}]: waiting for enemies done ({root.childCount} enemies).");
+                yield break;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Debug.LogWarning($"AutoPathRunner [{mapId}]: enemy spawn wait timed out ({enemySpawnWaitTimeout}s).");
     }
 
     private void BuildBridgeEnemyAvoidance(
@@ -1162,8 +1449,13 @@ public class AutoPathRunner : MonoBehaviour
             $"time={report.elapsed_seconds:0.00}s\n" +
             $"distance={report.world_distance:0.00}\n" +
             $"avg_speed={report.average_speed:0.00}\n" +
-            $"steps: path(p)={report.path_tile_steps}, ground(g)={report.ground_tile_steps}, other={report.other_tile_steps}, total={report.total_tile_steps}"
-        );
+            $"steps: path(p)={report.path_tile_steps}, ground(g)={report.ground_tile_steps}, other={report.other_tile_steps}, total={report.total_tile_steps}" +
+            (report.has_baseline_comparison
+                ? $"\n--- baseline (path only) ---\n" +
+                  $"baseline_steps={report.baseline_total_tile_steps}, baseline_distance={report.baseline_world_distance:0.00}\n" +
+                  $"baseline_est={report.baseline_estimated_seconds:0.00}s, delta_time=+{report.elapsed_delta_seconds:0.00}s, delta_dist=+{report.distance_delta:0.00}\n" +
+                  $"enemies={report.enemy_count}, replans={report.replan_count}"
+                : string.Empty));
     }
 
     private void ExportReport(PathRunReport report)
@@ -1174,20 +1466,93 @@ public class AutoPathRunner : MonoBehaviour
 
         string jsonPath = Path.Combine(directory, $"{report.map_id}_path_run.json");
         string csvPath = Path.Combine(directory, $"{report.map_id}_path_run.csv");
+        string comparisonPath = Path.Combine(directory, $"{report.map_id}_path_comparison.json");
 
         File.WriteAllText(jsonPath, JsonUtility.ToJson(report, true), Encoding.UTF8);
         File.WriteAllText(csvPath, BuildCsv(report), Encoding.UTF8);
+        if (report.has_baseline_comparison)
+            File.WriteAllText(comparisonPath, BuildComparisonJson(report), Encoding.UTF8);
 
         report.report_json_path = jsonPath;
         report.report_csv_path = csvPath;
 
-        Debug.Log($"AutoPathRunner report exported:\n{jsonPath}\n{csvPath}");
+        if (report.has_baseline_comparison)
+            ExportSummaryTable(report, directory);
+
+        Debug.Log(
+            $"AutoPathRunner report exported:\n{jsonPath}\n{csvPath}" +
+            (report.has_baseline_comparison ? $"\n{comparisonPath}" : string.Empty));
+    }
+
+    private void ExportSummaryTable(PathRunReport report, string directory)
+    {
+        string tablePath = Path.Combine(directory, $"{report.map_id}_path_summary.md");
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("# Bridge Path Run Summary");
+        sb.AppendLine();
+        sb.AppendLine($"| Metric | Baseline (path-only A*) | Actual (enemy avoid) | Delta |");
+        sb.AppendLine($"|---|---:|---:|---:|");
+        sb.AppendLine($"| Difficulty | {report.difficulty_level} | {report.difficulty_level} | |");
+        sb.AppendLine($"| Time (s) | {report.baseline_estimated_seconds:0.00} | {report.elapsed_seconds:0.00} | +{report.elapsed_delta_seconds:0.00} |");
+        sb.AppendLine($"| Route length | {report.baseline_world_distance:0.00} | {report.world_distance:0.00} | +{report.distance_delta:0.00} |");
+        sb.AppendLine($"| Tile steps | {report.baseline_total_tile_steps} | {report.total_tile_steps} | +{report.total_tile_steps - report.baseline_total_tile_steps} |");
+        sb.AppendLine($"| Grass detours | 0 | {report.ground_tile_steps} | +{report.ground_tile_steps} |");
+        sb.AppendLine($"| Enemies | 0 | {report.enemy_count} | +{report.enemy_count} |");
+        sb.AppendLine($"| Replans | 0 | {report.replan_count} | +{report.replan_count} |");
+        sb.AppendLine();
+        sb.AppendLine("- Red line = baseline path-only A*");
+        sb.AppendLine("- Cyan line = dynamic enemy-avoidance A*");
+
+        File.WriteAllText(tablePath, sb.ToString(), Encoding.UTF8);
+        Debug.Log($"AutoPathRunner summary table exported:\n{tablePath}");
+    }
+
+    private static string BuildComparisonJson(PathRunReport report)
+    {
+        return JsonUtility.ToJson(new PathRunComparisonExport
+        {
+            map_id = report.map_id,
+            created_at = report.created_at,
+            baseline_label = "path_only_astar",
+            dynamic_label = "enemy_avoidance_astar",
+            baseline_total_tile_steps = report.baseline_total_tile_steps,
+            baseline_world_distance = report.baseline_world_distance,
+            baseline_estimated_seconds = report.baseline_estimated_seconds,
+            actual_elapsed_seconds = report.elapsed_seconds,
+            actual_world_distance = report.world_distance,
+            elapsed_delta_seconds = report.elapsed_delta_seconds,
+            distance_delta = report.distance_delta,
+            enemy_count = report.enemy_count,
+            replan_count = report.replan_count,
+            ground_tile_steps = report.ground_tile_steps,
+            difficulty_level = report.difficulty_level
+        }, true);
+    }
+
+    [Serializable]
+    private class PathRunComparisonExport
+    {
+        public string map_id;
+        public string created_at;
+        public string baseline_label;
+        public string dynamic_label;
+        public int baseline_total_tile_steps;
+        public float baseline_world_distance;
+        public float baseline_estimated_seconds;
+        public float actual_elapsed_seconds;
+        public float actual_world_distance;
+        public float elapsed_delta_seconds;
+        public float distance_delta;
+        public int enemy_count;
+        public int replan_count;
+        public int ground_tile_steps;
+        public int difficulty_level;
     }
 
     private static string BuildCsv(PathRunReport report)
     {
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine("map_id,success,failure_reason,elapsed_seconds,world_distance,average_speed,path_tile_steps,ground_tile_steps,other_tile_steps,total_tile_steps");
+        sb.AppendLine("map_id,success,failure_reason,elapsed_seconds,world_distance,average_speed,path_tile_steps,ground_tile_steps,other_tile_steps,total_tile_steps,baseline_total_tile_steps,baseline_world_distance,baseline_estimated_seconds,elapsed_delta_seconds,distance_delta,enemy_count,replan_count");
         sb.AppendLine(string.Join(",",
             report.map_id,
             report.success,
@@ -1198,7 +1563,14 @@ public class AutoPathRunner : MonoBehaviour
             report.path_tile_steps,
             report.ground_tile_steps,
             report.other_tile_steps,
-            report.total_tile_steps));
+            report.total_tile_steps,
+            report.baseline_total_tile_steps,
+            report.baseline_world_distance.ToString("0.###"),
+            report.baseline_estimated_seconds.ToString("0.###"),
+            report.elapsed_delta_seconds.ToString("0.###"),
+            report.distance_delta.ToString("0.###"),
+            report.enemy_count,
+            report.replan_count));
         return sb.ToString();
     }
 

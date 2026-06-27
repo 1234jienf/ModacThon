@@ -63,20 +63,34 @@ public class BSP_Generator : MonoBehaviour
     private Vector2Int mapACenter;
     private Vector2Int mapBCenter;
 
-    void Start()
+    private void Awake()
+    {
+        if (GetComponent<BridgeGameSession>() == null)
+            gameObject.AddComponent<BridgeGameSession>();
+
+        if (FindObjectOfType<BridgeDifficultyController>() == null)
+            gameObject.AddComponent<BridgeDifficultyController>();
+    }
+
+    public void BeginGeneration()
     {
         if (map_A == null || map_B == null)
         {
             Debug.LogError("map_A 또는 map_B가 할당되지 않았습니다!");
             return;
         }
+
         GenerateBridgeMaps();
 
         PathProcessor pathProcessor = GetComponent<PathProcessor>();
         if (pathProcessor != null)
-        {
             pathProcessor.ProcessRoomPaths();
-        }
+    }
+
+    public void ApplyDifficultySettings(BridgeDifficultyPreset preset)
+    {
+        divideCount = preset.divideCount;
+        minNodeSizeToDivide = preset.minNodeSizeToDivide;
     }
 
     private void GenerateBridgeMaps()

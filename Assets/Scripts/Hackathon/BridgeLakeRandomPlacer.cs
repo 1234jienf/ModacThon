@@ -16,6 +16,7 @@ public static class BridgeLakeRandomPlacer
         public int minDistanceFromPath;
         public int patchRadiusMin;
         public int patchRadiusMax;
+        public int pathAdjacentLakePatches;
         public bool useFieldLakeRatios;
         public int randomSeed;
     }
@@ -138,6 +139,11 @@ public static class BridgeLakeRandomPlacer
             placedCells += StampLakePatch(grid, cell.x, cell.y, radius, pathProximity);
         }
 
+        if (settings.pathAdjacentLakePatches > 0)
+        {
+            placedCells += PlacePathAdjacentLakes(grid, settings.pathAdjacentLakePatches, settings.patchRadiusMin, settings.patchRadiusMax);
+        }
+
         Random.state = previousState;
 
         float actualCoverage = groundCells.Count > 0 ? placedCells / (float)groundCells.Count : 0f;
@@ -146,6 +152,78 @@ public static class BridgeLakeRandomPlacer
             $"(target={targetLakeCells}, coverage={actualCoverage:P1}, " +
             $"ratio L={chanceLeft:P1} R={chanceRight:P1}, candidates={groundCells.Count})");
         return placedCells;
+    }
+
+    public static int PlacePathAdjacentLakes(char[,] grid, int patchCount, int patchRadiusMin, int patchRadiusMax)
+    {
+        if (grid == null || patchCount <= 0)
+        {
+            return 0;
+        }
+
+        List<Vector2Int> candidates = CollectPathAdjacentGroundCells(grid);
+        Shuffle(candidates);
+
+        int placed = 0;
+        foreach (Vector2Int cell in candidates)
+        {
+            if (placed >= patchCount)
+            {
+                break;
+            }
+
+            int radius = Random.Range(Mathf.Max(1, patchRadiusMin), patchRadiusMax + 1);
+            placed += StampLakePatch(grid, cell.x, cell.y, radius, null);
+        }
+
+        return placed;
+    }
+
+    private static List<Vector2Int> CollectPathAdjacentGroundCells(char[,] grid)
+    {
+        List<Vector2Int> cells = new List<Vector2Int>();
+        int height = grid.GetLength(0);
+        int width = grid.GetLength(1);
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (!CanBecomeLake(grid[y, x]) || !IsAdjacentToPath(grid, x, y))
+                {
+                    continue;
+                }
+
+                cells.Add(new Vector2Int(x, y));
+            }
+        }
+
+        return cells;
+    }
+
+    private static bool IsAdjacentToPath(char[,] grid, int x, int y)
+    {
+        int height = grid.GetLength(0);
+        int width = grid.GetLength(1);
+        int[] dx = { 0, 0, -1, 1 };
+        int[] dy = { -1, 1, 0, 0 };
+
+        for (int i = 0; i < 4; i++)
+        {
+            int nx = x + dx[i];
+            int ny = y + dy[i];
+            if (nx < 0 || nx >= width || ny < 0 || ny >= height)
+            {
+                continue;
+            }
+
+            if (BridgeMapJsonUtility.IsPathTile(grid[ny, nx]))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static int ResolveLakeTileIndex(string[][] tokenRows, int row, int x)
@@ -314,7 +392,12 @@ public static class BridgeLakeRandomPlacer
                     continue;
                 }
 
-                if (pathProximity[y, x] || !CanBecomeLake(grid[y, x]))
+                if (pathProximity != null && pathProximity[y, x])
+                {
+                    continue;
+                }
+
+                if (!CanBecomeLake(grid[y, x]))
                 {
                     continue;
                 }

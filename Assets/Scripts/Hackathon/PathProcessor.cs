@@ -52,6 +52,16 @@ public class PathProcessor : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float groundLakeChanceRight = 0.14f;
     [SerializeField] private int lakeRandomSeed = 0;
+    [SerializeField] private int pathAdjacentLakePatches = 0;
+
+    public int PathAdjacentLakePatches => pathAdjacentLakePatches;
+
+    public void ApplyDifficultySettings(BridgeDifficultyPreset preset)
+    {
+        maxLakeCoverage = preset.maxLakeCoverage;
+        lakeMinDistanceFromPath = preset.lakeMinDistanceFromPath;
+        pathAdjacentLakePatches = preset.pathAdjacentLakePatches;
+    }
 
     [ContextMenu("방별 중심점 기반 펄린 패스 생성 및 이미지 저장")]
     public void ProcessRoomPaths()
@@ -150,6 +160,8 @@ public class PathProcessor : MonoBehaviour
 
         TriggerBridgePathRunners();
         TriggerAsciiMapRenderers();
+        TriggerEnemyPlacement();
+        TriggerMapOverviewRefresh();
     }
 
     private BridgeLakeRandomPlacer.Settings BuildLakeSettings()
@@ -164,6 +176,7 @@ public class PathProcessor : MonoBehaviour
         settings.useFieldLakeRatios = useFieldLakeRatios;
         settings.maxLakeCoverage = maxLakeCoverage;
         settings.randomSeed = lakeRandomSeed;
+        settings.pathAdjacentLakePatches = pathAdjacentLakePatches;
         return settings;
     }
 
@@ -194,6 +207,19 @@ public class PathProcessor : MonoBehaviour
             if (renderer != null)
                 renderer.RenderFromInspectorInput();
         }
+    }
+
+    private void TriggerEnemyPlacement()
+    {
+        EnemyTilemapPlacer placer = FindObjectOfType<EnemyTilemapPlacer>(true);
+        if (placer != null)
+            placer.PlaceEnemies();
+    }
+
+    private void TriggerMapOverviewRefresh()
+    {
+        if (BridgeMapOverviewUI.Instance != null)
+            BridgeMapOverviewUI.Instance.RefreshFromLatestMap();
     }
 
     private void TriggerBridgePathRunners()
