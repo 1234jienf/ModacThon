@@ -95,30 +95,19 @@ public class CustomerManager : MonoBehaviour {
     }
     void SpawnRandomCustomerAtSpawnPoint()
     {
-        SuperObject[] superObjects = FindObjectsOfType<SuperObject>();
+        GameObject spawnObject = GameObject.Find("Object_44");
 
-        foreach (var obj in superObjects)
+        if (spawnObject != null)
         {
-            if (obj.name == "Object_44")
+            // 두 종류의 NPC 프리팹 중 하나를 랜덤으로 선택하여 생성
+            GameObject npcPrefabToSpawn = Random.Range(0, 2) == 0 ? npcPrefabMale : npcPrefabFemale;
+
+            GameObject npc = Instantiate(npcPrefabToSpawn, spawnObject.transform.position, Quaternion.identity);
+            CustomerManager customerScript = npc.GetComponent<CustomerManager>();
+            if (customerScript != null)
             {
-                var customProperties = obj.GetComponent<SuperCustomProperties>();
-
-                if (customProperties != null)
-                {
-                    // Debug.Log("Spawning NPC at: " + obj.name);
-
-                    // 두 종류의 NPC 프리팹 중 하나를 랜덤으로 선택하여 생성
-                    GameObject npcPrefabToSpawn = Random.Range(0, 2) == 0 ? npcPrefabMale : npcPrefabFemale;
-
-                    GameObject npc = Instantiate(npcPrefabToSpawn, obj.transform.position, Quaternion.identity);
-                    CustomerManager customerScript = npc.GetComponent<CustomerManager>();
-                    if (customerScript != null)
-                    {
-                        customerScript.spawnPoint = obj.transform.position; // 스폰 위치 저장
-                        customerScript.InitializeAgent();  // NavMeshAgent 초기화
-                    }
-                    break;
-                }
+                customerScript.spawnPoint = spawnObject.transform.position; // 스폰 위치 저장
+                customerScript.InitializeAgent();  // NavMeshAgent 초기화
             }
         }
     }
