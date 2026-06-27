@@ -65,10 +65,6 @@ public class AutoPathRunner : MonoBehaviour
     [Tooltip("BSP PathProcessor가 만든 BridgeMapData_Path.json 으로 이동")]
     public bool useBridgePathJson = true;
     public string bridgePathJsonRelativePath = "tmpOutput/BridgeMapData_Path.json";
-    public float bridgePathWaitTimeout = 15f;
-
-    [Tooltip("PathProcessor가 Play 끝에서 StartRun() 호출. 끄면 JSON 파일 대기 후 자동 실행")]
-    public bool waitForPathProcessorOnPlay = true;
 
     [Tooltip("Visual ASCII(g/p/w) 기준으로 path(p) 타일을 따라 이동 (Field 맵 모드)")]
     public bool followVisualPath = true;
@@ -117,30 +113,9 @@ public class AutoPathRunner : MonoBehaviour
 
         if (useBridgePathJson)
         {
-            if (!waitForPathProcessorOnPlay)
-            {
-                _runCoroutine = StartCoroutine(WaitForBridgePathAndRun());
-            }
-
+            // Bridge 모드: PathProcessor.ProcessRoomPaths() 끝에서 StartRun() 호출.
+            // runOnStart만 켜도 Player Start()에서는 기다리지 않음 (JSON 생성 전일 수 있음).
             return;
-        }
-
-        StartRun();
-    }
-
-    private IEnumerator WaitForBridgePathAndRun()
-    {
-        if (startDelay > 0f)
-        {
-            yield return new WaitForSeconds(startDelay);
-        }
-
-        string fullPath = BridgeMapJsonUtility.GetProjectRelativePath(bridgePathJsonRelativePath);
-        float elapsed = 0f;
-        while (!File.Exists(fullPath) && elapsed < bridgePathWaitTimeout)
-        {
-            yield return new WaitForSeconds(0.25f);
-            elapsed += 0.25f;
         }
 
         StartRun();
@@ -223,7 +198,7 @@ public class AutoPathRunner : MonoBehaviour
 
         do
         {
-            if (startDelay > 0f && !useBridgePath)
+            if (startDelay > 0f)
             {
                 yield return new WaitForSeconds(startDelay);
             }
