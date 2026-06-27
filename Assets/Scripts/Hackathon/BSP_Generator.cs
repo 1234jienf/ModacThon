@@ -3,7 +3,6 @@ using UnityEngine.Tilemaps;
 using System.IO;
 using System.Collections.Generic;
 
-// --- JSON 저장을 위한 데이터 구조체 정의 ---
 [System.Serializable]
 public class MapJsonData
 {
@@ -11,7 +10,7 @@ public class MapJsonData
     public int height;
     public int startX;
     public int startY;
-    public List<string> mapGrid = new List<string>(); // 한 줄씩 저장되는 2차원 맵 데이터
+    public List<string> mapGrid = new List<string>(); 
 }
 
 public class BridgeMapNode
@@ -40,28 +39,29 @@ public class BSP_Generator : MonoBehaviour
     [SerializeField] private GameObject map_A; 
     [SerializeField] private GameObject map_B; 
 
+    [Header("=== [중요] 타일 정밀도 설정 ===")]
+    [Tooltip("타일 한 칸의 픽셀 크기입니다. (예: 16x16 이면 16 입력)")]
+    [SerializeField] private int pixelsPerTile = 16;
+
     [Header("=== BSP 분할 설정 (A안) ===")]
     [Tooltip("두 맵 사이의 공백 공간을 총 몇 번 쪼갤지 결정합니다.")]
     [SerializeField] private int divideCount = 3; 
-    [SerializeField] float minimumDevideRate = 0.25f; // 불규칙성을 위해 범위 확장
-    [SerializeField] float maximumDivideRate = 0.75f; 
+    [SerializeField] float minimumDevideRate = 0.3f; 
+    [SerializeField] float maximumDivideRate = 0.7f; 
 
-    [Header("=== [NEW] 방 크기 상세 설정 ===")]
-    [Tooltip("분할된 상자(노드) 크기 대비 '최소' 몇 % 크기로 방을 만들지 결정합니다. (0.1 ~ 1.0)")]
-    [Range(0.2f, 0.9f)] [SerializeField] private float minRoomSizeRatio = 0.5f; // 기존 0.3f에서 0.5f(50%)로 상향
-    [Tooltip("분할된 상자(노드) 크기 대비 '최대' 몇 % 크기로 방을 만들지 결정합니다. (0.1 ~ 1.0)")]
-    [Range(0.3f, 1.0f)] [SerializeField] private float maxRoomSizeRatio = 0.9f; 
-    [Tooltip("상자의 가로나 세로가 이 수치 이하로 작아지면 더 이상 쪼개지 않습니다.")]
-    [SerializeField] private int minNodeSizeToDivide = 10; // 기존 고정값 4에서 인스펙터 노출 및 기본값 상향
+    [Header("=== 방 크기 상세 설정 ===")]
+    [Range(0.4f, 0.9f)] [SerializeField] private float minRoomSizeRatio = 0.6f; 
+    [Range(0.5f, 1.0f)] [SerializeField] private float maxRoomSizeRatio = 0.95f; 
+    [SerializeField] private int minNodeSizeToDivide = 8; 
 
     [Header("=== 시각화 필터 ===")]
     [SerializeField] private bool drawTotalOutline = true;  
     [SerializeField] private bool drawDivideLines = true;   
     [SerializeField] private bool drawRoomLines = true;     
 
-    // 모든 리프 노드(최종 방 구획)를 추적하기 위한 리스트
     private List<BridgeMapNode> leafNodes = new List<BridgeMapNode>();
     private RectInt finalBridgeZone;
+    private Grid unityGrid; // 타일맵 셀 변환용 기준 그리드
 
     void Start()
     {
@@ -70,6 +70,9 @@ public class BSP_Generator : MonoBehaviour
             Debug.LogError("map_A 또는 map_B가 할당되지 않았습니다!");
             return;
         }
+
+        // 씬 내의 Grid 컴포넌트 자동 탐색 (없으면 Fallback)
+        unityGrid = FindFirstObjectByType<Grid>();
 
         GenerateBridgeMaps();
     }
@@ -81,11 +84,12 @@ public class BSP_Generator : MonoBehaviour
         Bounds boundsA = GetActualTilemapBounds(map_A);
         Bounds boundsB = GetActualTilemapBounds(map_B);
 
+        // 16픽셀 그리드 단위가 반영된 정밀 사잇공간 획득
         finalBridgeZone = CalculateBridgeZone(boundsA, boundsB);
 
         if (finalBridgeZone.width <= 0 || finalBridgeZone.height <= 0)
         {
-            Debug.LogError($"[오류] 사잇공간을 생성할 수 없습니다. 크기: {finalBridgeZone.width}x{finalBridgeZone.height}.");
+            Debug.LogError($"[오류] 16픽셀 그리드 기준 사잇공간 빌딩 실패. 크기: {finalBridgeZone.width}x{finalBridgeZone.height}.");
             return;
         }
 
@@ -98,14 +102,13 @@ public class BSP_Generator : MonoBehaviour
         Divide(root, 0);
         GenerateRoom(root, 0);
 
-        // [핵심] 방 생성이 모두 끝난 후, 수집된 데이터를 바탕으로 문자열 맵을 가공하고 JSON으로 저장합니다.
         SaveMapToJson();
     }
 
-    // --- (이전과 동일한 맵 경계선 구하기 로직) ---
     private Bounds GetActualTilemapBounds(GameObject mapObj)
     {
         Tilemap tilemap = mapObj.GetComponentInChildren<Tilemap>();
+        
         if (tilemap != null)
         {
             BoundsInt cellBounds = tilemap.cellBounds;
@@ -118,11 +121,13 @@ public class BSP_Generator : MonoBehaviour
                 if (tilemap.HasTile(pos))
                 {
                     hasTile = true;
+                    // 셀 좌표를 정확히 월드 좌표로 변환
                     Vector3 worldPos = tilemap.CellToWorld(pos);
                     minWorld = Vector3.Min(minWorld, worldPos);
                     maxWorld = Vector3.Max(maxWorld, worldPos + tilemap.layoutGrid.cellSize);
                 }
             }
+
             if (hasTile)
             {
                 Bounds actualBounds = new Bounds();
@@ -130,22 +135,56 @@ public class BSP_Generator : MonoBehaviour
                 return actualBounds;
             }
         }
+
         Renderer rend = mapObj.GetComponentInChildren<Renderer>();
         if (rend != null) return rend.bounds;
-        Collider2D col = mapObj.GetComponentInChildren<Collider2D>();
-        if (col != null) return col.bounds;
+
         return new Bounds(mapObj.transform.position, Vector3.one * 5f);
     }
 
+    /// <summary>
+    /// [핵심 수정] 유니티 월드 좌표를 16픽셀 단위 그리드(Cell) 인덱스로 완벽하게 동기화합니다.
+    /// </summary>
     private RectInt CalculateBridgeZone(Bounds bA, Bounds bB)
     {
-        int x = 0; int w = 0;
-        if (bA.max.x <= bB.min.x) { x = Mathf.FloorToInt(bA.max.x); w = Mathf.CeilToInt(bB.min.x) - x; }
-        else if (bB.max.x <= bA.min.x) { x = Mathf.FloorToInt(bB.max.x); w = Mathf.CeilToInt(bA.min.x) - x; }
-        else { float gapMinX = Mathf.Max(bA.min.x, bB.min.x); float gapMaxX = Mathf.Min(bA.max.x, bB.max.x); x = Mathf.FloorToInt(gapMinX); w = Mathf.CeilToInt(gapMaxX) - x; }
-        int y = Mathf.FloorToInt(Mathf.Min(bA.min.y, bB.min.y));
-        float maxY = Mathf.Max(bA.max.y, bB.max.y);
-        int h = Mathf.CeilToInt(maxY) - y;
+        // 타일의 물리적 단위 크기 계산 (보통 PPU가 16이면 cellSize는 1.0 혹은 타일 설정에 따라 달라짐)
+        float tileUnitSize = (unityGrid != null) ? unityGrid.cellSize.x : 1.0f;
+
+        // 월드 미터 단위를 타일 셀 단위 개수(정수)로 픽셀-퍼펙트 변환
+        int aMinX = Mathf.FloorToInt(bA.min.x / tileUnitSize);
+        int aMaxX = Mathf.CeilToInt(bA.max.x / tileUnitSize);
+        int bMinX = Mathf.FloorToInt(bB.min.x / tileUnitSize);
+        int bMaxX = Mathf.CeilToInt(bB.max.x / tileUnitSize);
+
+        int aMinY = Mathf.FloorToInt(bA.min.y / tileUnitSize);
+        int aMaxY = Mathf.CeilToInt(bA.max.y / tileUnitSize);
+        int bMinY = Mathf.FloorToInt(bB.min.y / tileUnitSize);
+        int bMaxY = Mathf.CeilToInt(bB.max.y / tileUnitSize);
+
+        int x = 0;
+        int w = 0;
+
+        // X축: 격자 단위로 딱 붙도록 조건 처리
+        if (aMaxX <= bMinX) // A가 왼쪽, B가 오른쪽
+        {
+            x = aMaxX;
+            w = bMinX - x;
+        }
+        else if (bMaxX <= aMinX) // B가 왼쪽, A가 오른쪽
+        {
+            x = bMaxX;
+            w = aMinX - x;
+        }
+        else // 대각선 상에서 X축이 교차하는 경우 교집합을 셀 단 정렬
+        {
+            x = Mathf.Max(aMinX, bMinX);
+            w = Mathf.Min(aMaxX, bMaxX) - x;
+        }
+
+        // Y축: 상하 양끝 타일을 완벽하게 포함하도록 셀 그리드 병합
+        int y = Mathf.Min(aMinY, bMinY);
+        int h = Mathf.Max(aMaxY, bMaxY) - y;
+
         return new RectInt(x, y, w, h);
     }
 
@@ -156,19 +195,20 @@ public class BSP_Generator : MonoBehaviour
         int maxLength = Mathf.Max(tree.nodeRect.width, tree.nodeRect.height);
         int split = Mathf.RoundToInt(Random.Range(maxLength * minimumDevideRate, maxLength * maximumDivideRate));
 
-        // [수정] 인스펙터에서 설정한 최소 노드 크기(minNodeSizeToDivide)를 기준으로 분할 중단 여부 결정
         if (maxLength <= minNodeSizeToDivide || split <= 1 || (maxLength - split) <= 1) return;
 
         if (tree.nodeRect.width >= tree.nodeRect.height) 
         {
             tree.leftNode = new BridgeMapNode(new RectInt(tree.nodeRect.x, tree.nodeRect.y, split, tree.nodeRect.height));
             tree.rightNode = new BridgeMapNode(new RectInt(tree.nodeRect.x + split, tree.nodeRect.y, tree.nodeRect.width - split, tree.nodeRect.height));
+            
             if (drawDivideLines) DrawLine(new Vector2(tree.nodeRect.x + split, tree.nodeRect.y), new Vector2(tree.nodeRect.x + split, tree.nodeRect.y + tree.nodeRect.height));
         }
         else
         {
             tree.leftNode = new BridgeMapNode(new RectInt(tree.nodeRect.x, tree.nodeRect.y, tree.nodeRect.width, split));
             tree.rightNode = new BridgeMapNode(new RectInt(tree.nodeRect.x, tree.nodeRect.y + split, tree.nodeRect.width, tree.nodeRect.height - split));
+            
             if (drawDivideLines) DrawLine(new Vector2(tree.nodeRect.x, tree.nodeRect.y + split), new Vector2(tree.nodeRect.x + tree.nodeRect.width, tree.nodeRect.y + split));
         }
 
@@ -191,13 +231,11 @@ public class BSP_Generator : MonoBehaviour
                 return rect; 
             }
 
-            // [수정] 인스펙터에서 조절 가능한 비율(Ratio)을 적용하여 최소/최대 방 크기 계산
             int minW = Mathf.Max(2, Mathf.RoundToInt(rect.width * minRoomSizeRatio));
             int maxW = Mathf.Max(minW, Mathf.RoundToInt(rect.width * maxRoomSizeRatio));
             int minH = Mathf.Max(2, Mathf.RoundToInt(rect.height * minRoomSizeRatio));
             int maxH = Mathf.Max(minH, Mathf.RoundToInt(rect.height * maxRoomSizeRatio));
 
-            // 가끔 max - 1이 min보다 작아지는 오차 방지를 위해 안전 마진 추가
             int width = Random.Range(minW, Mathf.Max(minW + 1, maxW)); 
             int height = Random.Range(minH, Mathf.Max(minH + 1, maxH));  
             
@@ -221,9 +259,6 @@ public class BSP_Generator : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// [새로 추가] 생성된 구역 데이터들을 바탕으로 차원 문자열 매트릭스를 만들어 JSON으로 추출합니다.
-    /// </summary>
     private void SaveMapToJson()
     {
         int w = finalBridgeZone.width;
@@ -249,7 +284,8 @@ public class BSP_Generator : MonoBehaviour
                 {
                     for (int x = startX; x < startX + node.roomRect.width; x++)
                     {
-                        if (x >= 0 && x < w && y >= 0 && y < h)
+                        // 사방 1칸 외곽 테두리선 보장
+                        if (x > 0 && x < w - 1 && y > 0 && y < h - 1)
                         {
                             grid[y, x] = '.';
                         }
@@ -271,12 +307,11 @@ public class BSP_Generator : MonoBehaviour
             {
                 sb.Append(grid[y, x]);
             }
-            jsonData.mapGrid.Add(sb.ToString()); // 대문자 Add 반영
+            jsonData.mapGrid.Add(sb.ToString());
         }
 
         string jsonString = JsonUtility.ToJson(jsonData, true);
 
-        // 프로젝트 루트 폴더 기준 하위 tmpOutput 폴더 설정
         string projectRoot = Directory.GetParent(Application.dataPath).FullName;
         string folderPath = Path.Combine(projectRoot, "tmpOutput");
         
@@ -285,26 +320,33 @@ public class BSP_Generator : MonoBehaviour
             Directory.CreateDirectory(folderPath);
         }
 
-        // 최종 파일 저장 경로
         string filePath = Path.Combine(folderPath, "BridgeMapData.json");
         
-        // ================= [강제 덮어쓰기 로직 추가] =================
-        // 이미 파일이 존재한다면, 권한 꼬임이나 파일 잠금을 방지하기 위해 먼저 완전히 삭제합니다.
         if (File.Exists(filePath))
         {
             File.Delete(filePath);
         }
         
-        // 새롭게 파일을 생성하고 스트림을 완전히 닫아 안전하게 저장합니다.
         File.WriteAllText(filePath, jsonString);
-        // ============================================================
 
-        Debug.Log($"[JSON 덮어쓰기 완료] 커스텀 경로: {filePath}\n디버그 미리보기:\n" + string.Join("\n", jsonData.mapGrid));
+        Debug.Log($"[JSON 덮어쓰기 완료] 16px 그리드 맞춤 적용 | 경로: {filePath}");
     }
 
-    // --- (이전과 동일한 라인 렌더러 시각화 헬퍼 기능들) ---
-    private void DrawMapOutline(RectInt rect) { GameObject go = new GameObject("Bridge_Total_Outline"); go.transform.SetParent(this.transform); LineRenderer lr = go.AddComponent<LineRenderer>(); SetupLineRenderer(lr, Color.white, 0.15f); lr.positionCount = 4; lr.loop = true; lr.SetPosition(0, new Vector2(rect.x, rect.y)); lr.SetPosition(1, new Vector2(rect.x + rect.width, rect.y)); lr.SetPosition(2, new Vector2(rect.x + rect.width, rect.y + rect.height)); lr.SetPosition(3, new Vector2(rect.x, rect.y + rect.height)); }
-    private void DrawLine(Vector2 from, Vector2 to) { GameObject go = new GameObject("BSP_Divide_Line"); go.transform.SetParent(this.transform); LineRenderer lr = go.AddComponent<LineRenderer>(); SetupLineRenderer(lr, Color.red, 0.06f); lr.positionCount = 2; lr.SetPosition(0, from); lr.SetPosition(1, to); }
-    private void DrawRectangle(RectInt rect) { GameObject go = new GameObject("Bridge_Room_Line"); go.transform.SetParent(this.transform); LineRenderer lr = go.AddComponent<LineRenderer>(); SetupLineRenderer(lr, Color.green, 0.09f); lr.positionCount = 4; lr.loop = true; lr.SetPosition(0, new Vector2(rect.x, rect.y)); lr.SetPosition(1, new Vector2(rect.x + rect.width, rect.y)); lr.SetPosition(2, new Vector2(rect.x + rect.width, rect.y + rect.height)); lr.SetPosition(3, new Vector2(rect.x, rect.y + rect.height)); }
+    // --- (라인 렌더러 시각화에도 타일 유닛 스케일을 곱해 완벽 매칭) ---
+    private void DrawMapOutline(RectInt rect) {
+        float s = (unityGrid != null) ? unityGrid.cellSize.x : 1.0f;
+        GameObject go = new GameObject("Bridge_Total_Outline"); go.transform.SetParent(this.transform); LineRenderer lr = go.AddComponent<LineRenderer>(); SetupLineRenderer(lr, Color.white, 0.15f); lr.positionCount = 4; lr.loop = true;
+        lr.SetPosition(0, new Vector2(rect.x * s, rect.y * s)); lr.SetPosition(1, new Vector2((rect.x + rect.width) * s, rect.y * s)); lr.SetPosition(2, new Vector2((rect.x + rect.width) * s, (rect.y + rect.height) * s)); lr.SetPosition(3, new Vector2(rect.x * s, (rect.y + rect.height) * s));
+    }
+    private void DrawLine(Vector2 from, Vector2 to) {
+        float s = (unityGrid != null) ? unityGrid.cellSize.x : 1.0f;
+        GameObject go = new GameObject("BSP_Divide_Line"); go.transform.SetParent(this.transform); LineRenderer lr = go.AddComponent<LineRenderer>(); SetupLineRenderer(lr, Color.red, 0.06f); lr.positionCount = 2;
+        lr.SetPosition(0, from * s); lr.SetPosition(1, to * s);
+    }
+    private void DrawRectangle(RectInt rect) {
+        float s = (unityGrid != null) ? unityGrid.cellSize.x : 1.0f;
+        GameObject go = new GameObject("Bridge_Room_Line"); go.transform.SetParent(this.transform); LineRenderer lr = go.AddComponent<LineRenderer>(); SetupLineRenderer(lr, Color.green, 0.09f); lr.positionCount = 4; lr.loop = true;
+        lr.SetPosition(0, new Vector2(rect.x * s, rect.y * s)); lr.SetPosition(1, new Vector2((rect.x + rect.width) * s, rect.y * s)); lr.SetPosition(2, new Vector2((rect.x + rect.width) * s, (rect.y + rect.height) * s)); lr.SetPosition(3, new Vector2(rect.x * s, (rect.y + rect.height) * s));
+    }
     private void SetupLineRenderer(LineRenderer lr, Color color, float width) { lr.startWidth = width; lr.endWidth = width; lr.useWorldSpace = true; Material defaultMat = new Material(Shader.Find("Sprites/Default")); lr.material = defaultMat; lr.startColor = color; lr.endColor = color; }
 }
