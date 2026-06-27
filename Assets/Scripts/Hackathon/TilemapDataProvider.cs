@@ -4,24 +4,21 @@ using System.Collections.Generic;
 
 public class TilemapDataProvider : MonoBehaviour
 {
-    [Header("1. 타일 에셋 설정")]
-    [Tooltip("기본 땅(Ground) 타일들을 등록합니다.")]
-    public List<TileBase> groundTiles = new List<TileBase>();
-    
-    [Tooltip("길(Road) 타일들을 등록합니다.")]
-    public List<TileBase> roadTiles = new List<TileBase>();
+    [Header("타일 에셋 설정")]
+    public List<TileBase> wallTiles = new List<TileBase>();
+    public List<TileBase> planeTiles = new List<TileBase>();
 
-    [Tooltip("물, 가시 등 통과 불가능한 타일 에셋(AnimatedTile 등)을 등록합니다.")]
-    public List<TileBase> obstacleTiles = new List<TileBase>(); 
+    [Header("타일셋 (0 TL, 1 T, 2 TR, 3 BL, 4 B, 5 BR, 6 C)")]
+    public TileBase[] pathTiles = new TileBase[7];
+    public TileBase[] groundTiles = new TileBase[7];
+    public TileBase[] lakeTiles = new TileBase[7];
 
-    [Header("2. 장애물 프리팹 에셋 설정")]
-    [Tooltip("프로젝트 창(Assets)의 장애물/건물 프리팹을 등록합니다. Sprite 크기를 계산해 영역을 채웁니다.")]
-    public List<GameObject> obstaclePrefabs = new List<GameObject>();
-
-    [Header("3. 맵 특징 오브젝트 (Option)")]
+    [Header("맵 특징 오브젝트 (Option)")]
     public GameObject startPoint;
     public GameObject goalPoint;
+    public List<GameObject> obstacles = new List<GameObject>();
 
+    // 하위의 모든 타일맵을 연산하기 위한 리스트
     private List<Tilemap> _tilemaps = new List<Tilemap>();
     private BoundsInt _combinedBounds;
     private bool _hasBounds = false;
@@ -31,28 +28,22 @@ public class TilemapDataProvider : MonoBehaviour
         InitializeTilemaps();
     }
 
+    /// <summary>
+    /// 1번 요건: 하위 타일맵을 자동으로 찾고 전체 경계 영역(Bounds)을 계산합니다.
+    /// </summary>
     private void InitializeTilemaps()
     {
         _tilemaps.Clear();
-        var foundTilemaps = GetComponentsInChildren<Tilemap>(true);
-        if (foundTilemaps.Length == 0) return;
+        // 자식 오브젝트를 포함하여 모든 Tilemap 컴포넌트 수집
+        _tilemaps.AddRange(GetComponentsInChildren<Tilemap>(true));
 
-        List<Tilemap> sortedList = new List<Tilemap>(foundTilemaps);
-        sortedList.Sort((a, b) =>
+        if (_tilemaps.Count == 0)
         {
-            var rendA = a.GetComponent<Renderer>(); 
-            var rendB = b.GetComponent<Renderer>();
-            if (rendA == null || rendB == null) return 0;
+            Debug.LogWarning($"{gameObject.name} 하위에 Tilemap 컴포넌트가 없습니다.");
+            return;
+        }
 
-            int layerValueA = SortingLayer.GetLayerValueFromID(rendA.sortingLayerID);
-            int layerValueB = SortingLayer.GetLayerValueFromID(rendB.sortingLayerID);
-
-            if (layerValueA != layerValueB) return layerValueB.CompareTo(layerValueA);
-            return rendB.sortingOrder.CompareTo(rendA.sortingOrder); 
-        });
-
-        _tilemaps = sortedList;
-
+        // 모든 타일맵을 아우르는 거대한 하나의 Bounds(범위) 계산
         _hasBounds = false;
         foreach (var tm in _tilemaps)
         {
@@ -64,6 +55,7 @@ public class TilemapDataProvider : MonoBehaviour
             }
             else
             {
+                // 범위를 계속 확장하며 합침
                 _combinedBounds.xMin = Mathf.Min(_combinedBounds.xMin, tm.cellBounds.xMin);
                 _combinedBounds.xMax = Mathf.Max(_combinedBounds.xMax, tm.cellBounds.xMax);
                 _combinedBounds.yMin = Mathf.Min(_combinedBounds.yMin, tm.cellBounds.yMin);
@@ -74,138 +66,316 @@ public class TilemapDataProvider : MonoBehaviour
 
     public char[,] GetMapMatrix()
     {
+        // 에디터 모드 대응을 위해 매번 다시 초기화 검사
         InitializeTilemaps();
+
         if (!_hasBounds) return new char[0, 0];
 
         int width = _combinedBounds.size.x;
         int height = _combinedBounds.size.y;
         char[,] mapMatrix = new char[height, width];
 
-        // [1단계] 타일맵 드로잉 및 Ground / Road / Obstacle 타일 분류
+        // 1단계: 바닥 및 벽 타일맵 먼저 그리기
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
                 Vector3Int tilePos = new Vector3Int(_combinedBounds.xMin + x, _combinedBounds.yMin + y, 0);
-                TileBase topTile = null;
-
-                foreach (var tm in _tilemaps)
-                {
-                    TileBase tile = tm.GetTile(tilePos);
-                    if (tile != null)
-                    {
-                        topTile = tile;
-                        break; 
-                    }
-                }
-
-                if (topTile == null)
-                {
-                    mapMatrix[y, x] = ' '; 
-                    continue;
-                }
-
-                string tileName = topTile.name.ToLower();
-
-                // 타일 식별 및 기호 매핑
-                if (obstacleTiles.Contains(topTile) || tileName.Contains("cliff") || tileName.Contains("water"))
-                {
-                    mapMatrix[y, x] = '▩'; // 장애물 타일
-                }
-                else if (roadTiles.Contains(topTile) || tileName.Contains("road") || tileName.Contains("path"))
-                {
-                    mapMatrix[y, x] = '□'; // Road (길)
-                }
-                else if (groundTiles.Contains(topTile) || tileName.Contains("ground") || tileName.Contains("grass"))
-                {
-                    mapMatrix[y, x] = '■'; // Ground (일반 땅)
-                }
-                else
-                {
-                    mapMatrix[y, x] = '？'; // 미지정
-                }
+                
+                mapMatrix[y, x] = GetStructureMarker(tilePos);
             }
         }
 
-        // [2단계] GameObject 장애물 처리 (Sprite 크기 고려 정밀 계산)
+        // 2단계: 2&3번 요건 - 일반 GameObject(시작, 목적지, 장애물) 좌표 보정 후 맵에 덮어쓰기
+        // 기준이 될 첫 번째 타일맵을 사용해 좌표 변환을 수행합니다.
         if (_tilemaps.Count > 0)
         {
             Tilemap referenceGrid = _tilemaps[0];
 
-            Transform[] allChildren = GetComponentsInChildren<Transform>(true);
-            foreach (var child in allChildren)
+            // 장애물들 배치 ('O')
+            foreach (var obstacle in obstacles)
             {
-                if (child == this.transform) continue;
-
-                foreach (var prefab in obstaclePrefabs)
-                {
-                    if (prefab == null) continue;
-
-                    // 이름 매칭 성공 시
-                    if (child.name.StartsWith(prefab.name))
-                    {
-                        // 자식 오브젝트의 SpriteRenderer를 가져옵니다.
-                        SpriteRenderer sRenderer = child.GetComponent<SpriteRenderer>();
-
-                        if (sRenderer != null)
-                        {
-                            // 스프라이트가 차지하는 실제 월드 바운드(영역) 추출
-                            Bounds spriteBounds = sRenderer.bounds;
-
-                            // 월드 바운드의 최소/최대 지점을 타일맵 격자(Cell)로 변환
-                            Vector3Int minCell = referenceGrid.WorldToCell(spriteBounds.min);
-                            Vector3Int maxCell = referenceGrid.WorldToCell(spriteBounds.max);
-
-                            // 스프라이트 크기가 차지하는 모든 타일 영역을 순회하며 장애물 각인
-                            for (int cellY = minCell.y; cellY <= maxCell.y; cellY++)
-                            {
-                                for (int cellX = minCell.x; cellX <= maxCell.x; cellX++)
-                                {
-                                    SetCellOnMatrix(mapMatrix, cellX, cellY, '▩');
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // SpriteRenderer가 없는 일반 오브젝트인 경우 기존처럼 중심점 1칸만 처리
-                            Vector3Int cellPos = referenceGrid.WorldToCell(child.position);
-                            SetCellOnMatrix(mapMatrix, cellPos.x, cellPos.y, '▩');
-                        }
-                        break; 
-                    }
-                }
+                if (obstacle != null) 
+                    SetObjectOnMatrix(mapMatrix, referenceGrid, obstacle.transform.position, 'O'); // 장애물
             }
 
-            // [3단계] 옵션 특징 오브젝트 마킹 (S, G)
+            // 시작점 배치 ('Ｓ')
             if (startPoint != null) 
-            {
-                Vector3Int cell = referenceGrid.WorldToCell(startPoint.transform.position);
-                SetCellOnMatrix(mapMatrix, cell.x, cell.y, 'Ｓ');
-            }
+                SetObjectOnMatrix(mapMatrix, referenceGrid, startPoint.transform.position, 'S');
+
+            // 도착점 배치 ('Ｇ')
             if (goalPoint != null) 
-            {
-                Vector3Int cell = referenceGrid.WorldToCell(goalPoint.transform.position);
-                SetCellOnMatrix(mapMatrix, cell.x, cell.y, 'Ｇ');
-            }
+                SetObjectOnMatrix(mapMatrix, referenceGrid, goalPoint.transform.position, 'G');
         }
 
         return mapMatrix;
     }
 
-    /// <summary>
-    /// 계산된 격자 좌표(X, Y)를 배열 범위 체크 후 안전하게 대입하는 내부 함수
-    /// </summary>
-    private void SetCellOnMatrix(char[,] matrix, int cellX, int cellY, char marker)
+    public char[,] GetVisualMapMatrix()
     {
-        int xIdx = cellX - _combinedBounds.xMin;
-        int yIdx = cellY - _combinedBounds.yMin;
+        InitializeTilemaps();
+
+        if (!_hasBounds) return new char[0, 0];
+
+        int width = _combinedBounds.size.x;
+        int height = _combinedBounds.size.y;
+        char[,] mapMatrix = new char[height, width];
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                Vector3Int tilePos = new Vector3Int(_combinedBounds.xMin + x, _combinedBounds.yMin + y, 0);
+                mapMatrix[y, x] = GetVisualMarker(tilePos);
+            }
+        }
+
+        if (_tilemaps.Count > 0)
+        {
+            Tilemap referenceGrid = _tilemaps[0];
+
+            foreach (var obstacle in obstacles)
+            {
+                if (obstacle != null)
+                    SetObjectOnMatrix(mapMatrix, referenceGrid, obstacle.transform.position, 'O');
+            }
+
+            if (startPoint != null)
+                SetObjectOnMatrix(mapMatrix, referenceGrid, startPoint.transform.position, 'S');
+
+            if (goalPoint != null)
+                SetObjectOnMatrix(mapMatrix, referenceGrid, goalPoint.transform.position, 'G');
+        }
+
+        return mapMatrix;
+    }
+
+    public Bounds GetWorldBounds()
+    {
+        InitializeTilemaps();
+
+        bool hasTileBounds = false;
+        Bounds bounds = new Bounds(transform.position, Vector3.one);
+
+        foreach (var tilemap in _tilemaps)
+        {
+            tilemap.CompressBounds();
+            BoundsInt cellBounds = tilemap.cellBounds;
+
+            for (int y = cellBounds.yMin; y < cellBounds.yMax; y++)
+            {
+                for (int x = cellBounds.xMin; x < cellBounds.xMax; x++)
+                {
+                    Vector3Int cellPosition = new Vector3Int(x, y, 0);
+                    if (tilemap.GetTile(cellPosition) == null)
+                    {
+                        continue;
+                    }
+
+                    Bounds tileWorldBounds = GetTileWorldBounds(tilemap, cellPosition);
+                    if (!hasTileBounds)
+                    {
+                        bounds = tileWorldBounds;
+                        hasTileBounds = true;
+                    }
+                    else
+                    {
+                        bounds.Encapsulate(tileWorldBounds);
+                    }
+                }
+            }
+        }
+
+        return bounds;
+    }
+
+    private Bounds GetTileWorldBounds(Tilemap tilemap, Vector3Int cellPosition)
+    {
+        Vector3 bottomLeft = tilemap.CellToWorld(cellPosition);
+        Vector3 topRight = tilemap.CellToWorld(cellPosition + new Vector3Int(1, 1, 0));
+        Vector3 center = (bottomLeft + topRight) * 0.5f;
+        Vector3 size = new Vector3(
+            Mathf.Abs(topRight.x - bottomLeft.x),
+            Mathf.Abs(topRight.y - bottomLeft.y),
+            0.1f
+        );
+
+        return new Bounds(center, size);
+    }
+
+    private char GetStructureMarker(Vector3Int tilePos)
+    {
+        bool hasWalkableTile = false;
+        bool hasUnknownTile = false;
+
+        foreach (var tilemap in _tilemaps)
+        {
+            TileBase tile = tilemap.GetTile(tilePos);
+            if (tile == null)
+            {
+                continue;
+            }
+
+            char marker = ClassifyTile(tile, tilemap);
+            if (marker == '#' || marker == 'w')
+            {
+                return '#';
+            }
+
+            if (marker == '.' || marker == 'g' || marker == 'p' || marker == 's')
+            {
+                hasWalkableTile = true;
+            }
+            else
+            {
+                hasUnknownTile = true;
+            }
+        }
+
+        if (hasWalkableTile)
+        {
+            return '.';
+        }
+
+        return hasUnknownTile ? '?' : ' ';
+    }
+
+    private char GetVisualMarker(Vector3Int tilePos)
+    {
+        char bestMarker = ' ';
+        int bestPriority = -1;
+
+        foreach (var tilemap in _tilemaps)
+        {
+            TileBase tile = tilemap.GetTile(tilePos);
+            if (tile == null)
+            {
+                continue;
+            }
+
+            char marker = ClassifyTile(tile, tilemap);
+            int priority = GetVisualPriority(marker);
+            if (priority > bestPriority)
+            {
+                bestMarker = marker;
+                bestPriority = priority;
+            }
+        }
+
+        return bestMarker;
+    }
+
+    private char ClassifyTile(TileBase tile, Tilemap tilemap)
+    {
+        string tileName = tile.name.ToLower();
+        string tilemapName = tilemap.gameObject.name.ToLower();
+
+        if (tileName.Contains("cliff") || wallTiles.Contains(tile) || IsWallTilemap(tilemapName))
+        {
+            return '#';
+        }
+
+        if (IsWaterTilemap(tilemapName))
+        {
+            return 'w';
+        }
+
+        if (IsPathTilemap(tilemapName))
+        {
+            return 'p';
+        }
+
+        if (IsSnowTilemap(tilemapName))
+        {
+            return 's';
+        }
+
+        if (IsGroundTilemap(tilemapName) || planeTiles.Contains(tile))
+        {
+            return 'g';
+        }
+
+        return '?';
+    }
+
+    private int GetVisualPriority(char marker)
+    {
+        switch (marker)
+        {
+            case '#':
+                return 60;
+            case 'w':
+                return 50;
+            case 'p':
+                return 40;
+            case 's':
+                return 30;
+            case 'g':
+                return 20;
+            case '.':
+                return 10;
+            case '?':
+                return 0;
+            default:
+                return -1;
+        }
+    }
+
+    private bool IsWallTilemap(string tilemapName)
+    {
+        return tilemapName.Contains("tree")
+            || tilemapName.Contains("border")
+            || tilemapName.Contains("wall")
+            || tilemapName.Contains("cliff");
+    }
+
+    private bool IsWaterTilemap(string tilemapName)
+    {
+        return tilemapName.Contains("lake")
+            || tilemapName.Contains("water");
+    }
+
+    private bool IsPathTilemap(string tilemapName)
+    {
+        return tilemapName.Contains("dirt")
+            || tilemapName.Contains("road")
+            || tilemapName.Contains("path");
+    }
+
+    private bool IsSnowTilemap(string tilemapName)
+    {
+        return tilemapName.Contains("snow")
+            || tilemapName.Contains("ice");
+    }
+
+    private bool IsGroundTilemap(string tilemapName)
+    {
+        return tilemapName.Contains("grass")
+            || tilemapName.Contains("ground")
+            || tilemapName.Contains("base")
+            || tilemapName.Contains("surface");
+    }
+
+    /// <summary>
+    /// 월드 좌표를 타일맵 격자 좌표로 보정하여 2차원 배열에 각인하는 함수
+    /// </summary>
+    private void SetObjectOnMatrix(char[,] matrix, Tilemap refGrid, Vector3 worldPos, char marker)
+    {
+        // 월드 좌표 -> 타일맵 Cell (격자) 좌표로 보정 (치명적인 오차 해결)
+        Vector3Int cellPos = refGrid.WorldToCell(worldPos);
+
+        // 거대한 통합 Bounds 격자 내의 상대 인덱스로 변환
+        int xIdx = cellPos.x - _combinedBounds.xMin;
+        int yIdx = cellPos.y - _combinedBounds.yMin;
 
         int height = matrix.GetLength(0);
         int width = matrix.GetLength(1);
 
+        // 오브젝트가 타일맵 바깥 영역에 실수로 나가지 않았는지 예외 처리
         if (xIdx >= 0 && xIdx < width && yIdx >= 0 && yIdx < height)
         {
             matrix[yIdx, xIdx] = marker;
         }
     }
+
 }

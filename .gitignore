@@ -34,8 +34,16 @@
 .DS_Store
 Thumbs.db
 
+# Local secrets
+.env
+
 # Crash reports
 sysinfo.txt
 
 # Unity package manager
 Packages/packages-lock.json
+
+# Hackathon AI generated outputs
+HackathonAI/runs/
+HackathonAI/generated_images/
+__pycache__/
