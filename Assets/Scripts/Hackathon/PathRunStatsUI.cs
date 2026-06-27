@@ -64,15 +64,7 @@ public class PathRunStatsUI : MonoBehaviour
         if (statsText != null)
             return;
 
-        Canvas canvas = FindObjectOfType<Canvas>();
-        if (canvas == null)
-        {
-            GameObject canvasObject = new GameObject("PathRunStatsCanvas");
-            canvas = canvasObject.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasObject.AddComponent<CanvasScaler>();
-            canvasObject.AddComponent<GraphicRaycaster>();
-        }
+        Canvas canvas = BridgeUiFactory.GetOrCreateCanvas("PathRunStatsCanvas", 8000);
 
         GameObject panel = new GameObject("PathRunStatsPanel");
         panel.transform.SetParent(canvas.transform, false);
@@ -85,6 +77,7 @@ public class PathRunStatsUI : MonoBehaviour
 
         Image background = panel.AddComponent<Image>();
         background.color = new Color(0f, 0f, 0f, 0.55f);
+        background.raycastTarget = false;
 
         GameObject textObject = new GameObject("StatsText");
         textObject.transform.SetParent(panel.transform, false);

@@ -18,6 +18,8 @@ public class BridgeGameSession : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        IsStarted = false;
+
         if (bspGenerator == null)
             bspGenerator = FindObjectOfType<BSP_Generator>();
 

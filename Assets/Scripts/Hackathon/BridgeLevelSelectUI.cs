@@ -18,8 +18,21 @@ public class BridgeLevelSelectUI : MonoBehaviour
 
     private void Start()
     {
+        EnsureEventSystem();
+        ShowPanel();
+
         if (BridgeGameSession.Instance != null && BridgeGameSession.Instance.IsStarted)
             Hide();
+    }
+
+    private void ShowPanel()
+    {
+        if (panelGroup == null)
+            return;
+
+        panelGroup.alpha = 1f;
+        panelGroup.interactable = true;
+        panelGroup.blocksRaycasts = true;
     }
 
     private void Update()
@@ -37,12 +50,23 @@ public class BridgeLevelSelectUI : MonoBehaviour
 
     private static void EnsureEventSystem()
     {
-        if (FindObjectOfType<EventSystem>() != null)
-            return;
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null)
+            eventSystem = FindObjectOfType<EventSystem>();
 
-        GameObject eventSystemObject = new GameObject("EventSystem");
-        eventSystemObject.AddComponent<EventSystem>();
-        eventSystemObject.AddComponent<StandaloneInputModule>();
+        if (eventSystem == null)
+        {
+            GameObject eventSystemObject = new GameObject("EventSystem");
+            eventSystem = eventSystemObject.AddComponent<EventSystem>();
+        }
+
+        if (eventSystem.GetComponent<StandaloneInputModule>() == null &&
+            eventSystem.GetComponent<BaseInputModule>() == null)
+        {
+            eventSystem.gameObject.AddComponent<StandaloneInputModule>();
+        }
+
+        eventSystem.enabled = true;
     }
 
     public void Hide()
@@ -76,7 +100,7 @@ public class BridgeLevelSelectUI : MonoBehaviour
             GameObject canvasObject = new GameObject(CanvasName);
             canvas = canvasObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 9000;
+            canvas.sortingOrder = 99999;
 
             CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -194,11 +218,15 @@ public class BridgeLevelSelectUI : MonoBehaviour
 
     private void OnLevelSelected(int level, string detail)
     {
+        Debug.Log($"BridgeLevelSelectUI: Level {level} selected");
+
         if (descriptionText != null)
             descriptionText.text = detail;
 
         if (BridgeGameSession.Instance != null)
             BridgeGameSession.Instance.StartSession(level);
+        else
+            Debug.LogError("BridgeLevelSelectUI: BridgeGameSession.Instance is null");
 
         Hide();
     }

@@ -112,7 +112,7 @@ public class AutoPathRunner : MonoBehaviour
     public float enemyAvoidanceCost = 60f;
     [Tooltip("이동 중 몬스터 위치가 바뀌면 주기적으로 A* 재계산")]
     public bool replanPathDuringRun = true;
-    public float replanInterval = 0.75f;
+    public float replanInterval = 1.5f;
 
     [Header("Path Visualization")]
     public bool showPathLines = true;
@@ -144,6 +144,7 @@ public class AutoPathRunner : MonoBehaviour
 
     private Coroutine _runCoroutine;
     private SpriteRenderer _runnerRenderer;
+    private Rigidbody2D _runnerRigidbody;
     private Player _player;
     private Animator _animator;
     private bool _playerWasEnabled;
@@ -154,6 +155,9 @@ public class AutoPathRunner : MonoBehaviour
     private float _liveBaselineEstimatedSeconds;
     private int _liveEnemyCount;
     private int _liveReplanCount;
+    private RigidbodyType2D _savedBodyType;
+    private bool _savedSimulated;
+    private PathRunLiveStats _liveStatsCache;
 
     private void Awake()
     {
@@ -227,6 +231,7 @@ public class AutoPathRunner : MonoBehaviour
 
         SetWalkingAnimation(false);
         RestorePlayerControl();
+        RestoreRunnerPhysics();
         SetPathLinesVisible(false);
     }
 
@@ -234,6 +239,8 @@ public class AutoPathRunner : MonoBehaviour
     {
         if (runnerTransform != null)
         {
+            if (_runnerRigidbody == null)
+                _runnerRigidbody = runnerTransform.GetComponent<Rigidbody2D>();
             return;
         }
 
@@ -241,6 +248,7 @@ public class AutoPathRunner : MonoBehaviour
         {
             runnerTransform = transform;
             autoCreateRunner = false;
+            _runnerRigidbody = GetComponent<Rigidbody2D>();
             return;
         }
 
@@ -261,9 +269,34 @@ public class AutoPathRunner : MonoBehaviour
         runnerObject.transform.localScale = Vector3.one * 0.6f;
     }
 
+    private void SetRunnerWorldPosition(Vector3 worldPosition)
+    {
+        if (runnerTransform != null)
+            runnerTransform.position = worldPosition;
+
+        if (_runnerRigidbody != null)
+        {
+            _runnerRigidbody.velocity = Vector2.zero;
+            _runnerRigidbody.angularVelocity = 0f;
+            _runnerRigidbody.position = new Vector2(worldPosition.x, worldPosition.y);
+        }
+    }
+
+    private Vector3 GetRunnerWorldPosition()
+    {
+        if (runnerTransform != null)
+            return runnerTransform.position;
+
+        if (_runnerRigidbody != null)
+            return _runnerRigidbody.position;
+
+        return Vector3.zero;
+    }
+
     private IEnumerator RunPathRoutine(bool useBridgePath)
     {
         DisablePlayerControl();
+        PrepareRunnerPhysics();
 
         do
         {
@@ -301,7 +334,53 @@ public class AutoPathRunner : MonoBehaviour
 
         SetWalkingAnimation(false);
         RestorePlayerControl();
+        RestoreRunnerPhysics();
         _runCoroutine = null;
+    }
+
+    private void PrepareRunnerPhysics()
+    {
+        EnsureRunnerTransform();
+        if (_runnerRigidbody == null)
+        {
+            return;
+        }
+
+        _savedBodyType = _runnerRigidbody.bodyType;
+        _savedSimulated = _runnerRigidbody.simulated;
+        _runnerRigidbody.bodyType = RigidbodyType2D.Kinematic;
+        _runnerRigidbody.simulated = false;
+        _runnerRigidbody.velocity = Vector2.zero;
+        _runnerRigidbody.angularVelocity = 0f;
+    }
+
+    private void RestoreRunnerPhysics()
+    {
+        if (_runnerRigidbody == null)
+        {
+            return;
+        }
+
+        _runnerRigidbody.simulated = _savedSimulated;
+        _runnerRigidbody.bodyType = _savedBodyType;
+    }
+
+    private void UpdateLiveStats(
+        bool isRunning,
+        float elapsedSeconds = 0f,
+        float actualRouteDistance = 0f)
+    {
+        _liveStatsCache.isRunning = isRunning;
+        _liveStatsCache.difficultyLevel = BridgeDifficultyController.Instance != null
+            ? BridgeDifficultyController.Instance.DifficultyLevel
+            : 0;
+        _liveStatsCache.elapsedSeconds = elapsedSeconds;
+        _liveStatsCache.actualRouteDistance = actualRouteDistance;
+        _liveStatsCache.baselineRouteDistance = _liveBaselineDistance;
+        _liveStatsCache.baselineEstimatedSeconds = _liveBaselineEstimatedSeconds;
+        _liveStatsCache.replanCount = _liveReplanCount;
+        _liveStatsCache.enemyCount = _liveEnemyCount;
+        liveStats = _liveStatsCache;
     }
 
     private void DisablePlayerControl()
@@ -373,6 +452,36 @@ public class AutoPathRunner : MonoBehaviour
         return best;
     }
 
+    private void ResolveBridgeScenePoints(out Transform sceneStart, out Transform sceneGoal)
+    {
+        sceneStart = null;
+        sceneGoal = null;
+
+        TilemapDataProvider[] providers = FindObjectsOfType<TilemapDataProvider>(true);
+        foreach (TilemapDataProvider provider in providers)
+        {
+            if (provider == null)
+            {
+                continue;
+            }
+
+            if (provider.startPoint != null)
+            {
+                sceneStart = provider.startPoint.transform;
+            }
+
+            if (provider.goalPoint != null)
+            {
+                sceneGoal = provider.goalPoint.transform;
+            }
+
+            if (sceneStart != null && sceneGoal != null)
+            {
+                return;
+            }
+        }
+    }
+
     private static int ScoreMapProvider(TilemapDataProvider provider)
     {
         int score = 0;
@@ -403,11 +512,22 @@ public class AutoPathRunner : MonoBehaviour
             yield break;
         }
 
-        if (!BridgeMapJsonUtility.TryFindBridgeEndpoints(pathMatrix, out Vector2Int start, out Vector2Int goal))
+        ResolveBridgeScenePoints(out Transform sceneStart, out Transform sceneGoal);
+
+        if (!BridgeMapJsonUtility.TryResolveBridgeEndpoints(
+                bridgeData,
+                pathMatrix,
+                sceneStart,
+                sceneGoal,
+                out Vector2Int start,
+                out Vector2Int goal))
         {
             latestReport = BuildFailureReport("Bridge map에서 S/E(좌→우 path) 끝점을 찾지 못했습니다.");
             yield break;
         }
+
+        EnsureRunnerTransform();
+        SetRunnerWorldPosition(BridgeMapJsonUtility.GridCellToWorld(bridgeData, start.x, start.y));
 
         Debug.Log(
             $"AutoPathRunner [{mapId}]: bridge start=({start.x},{start.y}) goal=({goal.x},{goal.y}) " +
@@ -433,7 +553,15 @@ public class AutoPathRunner : MonoBehaviour
         _liveEnemyCount = enemyCount;
         _liveReplanCount = 0;
         List<Vector2Int> path = ComputeBridgePath(bridgeData, pathMatrix, start, goal, useEnemyAvoidance: true);
-        if (path == null || path.Count == 0)
+        if (!IsUsablePath(path))
+        {
+            Debug.LogWarning(
+                "AutoPathRunner: enemy-avoidance path unavailable; using baseline path. " +
+                "Path may be fully blocked by enemies — try soft detour or fewer blockers.");
+            path = baselinePath;
+        }
+
+        if (path == null || path.Count <= 1)
         {
             latestReport = BuildFailureReport("Bridge map A→B path(P)가 끊겨 있습니다. PathProcessor 결과를 확인하세요.");
             yield break;
@@ -442,7 +570,7 @@ public class AutoPathRunner : MonoBehaviour
         UpdatePathLine(GetDynamicPathLine(), bridgeData, path);
         SetPathLinesVisible(showPathLines);
 
-        runnerTransform.position = BridgeMapJsonUtility.GridCellToWorld(bridgeData, path[0].x, path[0].y);
+        SetRunnerWorldPosition(BridgeMapJsonUtility.GridCellToWorld(bridgeData, start.x, start.y));
 
         float elapsed = 0f;
         float worldDistance = 0f;
@@ -453,14 +581,7 @@ public class AutoPathRunner : MonoBehaviour
         int pathIndex = 1;
         int replanCount = 0;
 
-        liveStats = new PathRunLiveStats
-        {
-            isRunning = true,
-            difficultyLevel = BridgeDifficultyController.Instance != null ? BridgeDifficultyController.Instance.DifficultyLevel : 0,
-            baselineRouteDistance = baselineWorldDistance,
-            baselineEstimatedSeconds = baselineEstimatedSeconds,
-            enemyCount = enemyCount
-        };
+        UpdateLiveStats(true, 0f, 0f);
 
         while (pathIndex < path.Count)
         {
@@ -469,32 +590,25 @@ public class AutoPathRunner : MonoBehaviour
             CountBridgeMarker(marker, ref pathSteps, ref groundSteps, ref otherSteps);
 
             Vector3 target = BridgeMapJsonUtility.GridCellToWorld(bridgeData, cell.x, cell.y);
-            Vector3 previous = runnerTransform.position;
+            Vector3 previous = GetRunnerWorldPosition();
             SetWalkingAnimation(true);
-            UpdateFacing(target - runnerTransform.position);
+            UpdateFacing(target - GetRunnerWorldPosition());
 
-            while (Vector3.Distance(runnerTransform.position, target) > 0.02f)
+            while (Vector3.Distance(GetRunnerWorldPosition(), target) > 0.02f)
             {
                 float step = moveSpeed * Time.deltaTime;
-                runnerTransform.position = Vector3.MoveTowards(runnerTransform.position, target, step);
+                SetRunnerWorldPosition(Vector3.MoveTowards(GetRunnerWorldPosition(), target, step));
                 elapsed += Time.deltaTime;
                 replanTimer += Time.deltaTime;
-                liveStats = new PathRunLiveStats
-                {
-                    isRunning = true,
-                    difficultyLevel = BridgeDifficultyController.Instance != null ? BridgeDifficultyController.Instance.DifficultyLevel : 0,
-                    elapsedSeconds = elapsed,
-                    actualRouteDistance = worldDistance + Vector3.Distance(runnerTransform.position, target),
-                    baselineRouteDistance = _liveBaselineDistance,
-                    baselineEstimatedSeconds = _liveBaselineEstimatedSeconds,
-                    replanCount = _liveReplanCount,
-                    enemyCount = _liveEnemyCount
-                };
+                UpdateLiveStats(
+                    true,
+                    elapsed,
+                    worldDistance + Vector3.Distance(GetRunnerWorldPosition(), target));
 
                 if (replanPathDuringRun && avoidGeneratedEnemies && replanTimer >= replanInterval)
                 {
                     replanTimer = 0f;
-                    Vector2Int currentCell = WorldToBridgeCell(bridgeData, runnerTransform.position);
+                    Vector2Int currentCell = WorldToBridgeCell(bridgeData, GetRunnerWorldPosition());
                     List<Vector2Int> newPath = ComputeBridgePath(bridgeData, pathMatrix, currentCell, goal, useEnemyAvoidance: true);
                     if (newPath != null && newPath.Count > 1)
                     {
@@ -512,7 +626,7 @@ public class AutoPathRunner : MonoBehaviour
                 yield return null;
             }
 
-            runnerTransform.position = target;
+            SetRunnerWorldPosition(target);
             worldDistance += Vector3.Distance(previous, target);
             pathIndex++;
         }
@@ -570,29 +684,41 @@ public class AutoPathRunner : MonoBehaviour
         Vector2Int goal,
         bool useEnemyAvoidance)
     {
-        HashSet<Vector2Int> blockedCells;
-        Dictionary<Vector2Int, float> extraCosts;
-        if (useEnemyAvoidance && avoidGeneratedEnemies)
-            BuildBridgeEnemyAvoidance(bridgeData, matrix, start, goal, out blockedCells, out extraCosts);
-        else
+        if (!useEnemyAvoidance || !avoidGeneratedEnemies)
         {
-            blockedCells = new HashSet<Vector2Int>();
-            extraCosts = new Dictionary<Vector2Int, float>();
+            return FindPathAStar(
+                matrix, start, goal, true, false, pathTileCost, grassTileCost, null, null);
         }
 
-        if (!useEnemyAvoidance)
-            return FindPathAStar(matrix, start, goal, true, false, pathTileCost, grassTileCost, blockedCells, extraCosts);
+        BuildBridgeEnemyAvoidance(
+            bridgeData, matrix, start, goal, out HashSet<Vector2Int> blockedCells, out Dictionary<Vector2Int, float> extraCosts);
 
-        List<Vector2Int> pathOnlyRoute = FindPathAStar(
+        List<Vector2Int> path = FindPathAStar(
             matrix, start, goal, true, false, pathTileCost, grassTileCost, blockedCells, extraCosts);
-        if (pathOnlyRoute != null && pathOnlyRoute.Count > 0)
-            return pathOnlyRoute;
+        if (IsUsablePath(path))
+            return path;
+
+        path = FindPathAStar(
+            matrix, start, goal, true, false, pathTileCost, grassTileCost, null, extraCosts);
+        if (IsUsablePath(path))
+            return path;
 
         if (!_allowGrassDetourWhenBlocked || !allowGrassDetour)
             return null;
 
-        return FindPathAStar(
+        path = FindPathAStar(
+            matrix, start, goal, false, true, pathTileCost, grassTileCost, null, extraCosts);
+        if (IsUsablePath(path))
+            return path;
+
+        path = FindPathAStar(
             matrix, start, goal, false, true, pathTileCost, grassTileCost, blockedCells, extraCosts);
+        return IsUsablePath(path) ? path : null;
+    }
+
+    private static bool IsUsablePath(List<Vector2Int> path)
+    {
+        return path != null && path.Count > 1;
     }
 
     private static float MeasureBridgePathWorldDistance(InputMapData bridgeData, List<Vector2Int> path)
@@ -750,10 +876,8 @@ public class AutoPathRunner : MonoBehaviour
 
         foreach (Transform enemy in GetEnemyTransforms())
         {
-            Vector3 position = enemy.position;
-            int x = Mathf.FloorToInt(position.x - bridgeData.startX);
-            int y = Mathf.FloorToInt(position.y - bridgeData.startY);
-            AddEnemyAvoidanceCell(new Vector2Int(x, y), matrix, start, goal, blockedCells, extraCosts);
+            Vector2Int enemyCell = BridgeMapJsonUtility.WorldToBridgeCell(bridgeData, enemy.position);
+            AddEnemyAvoidanceCell(enemyCell, matrix, start, goal, blockedCells, extraCosts);
         }
     }
 
@@ -849,7 +973,13 @@ public class AutoPathRunner : MonoBehaviour
 
                 if (distance <= blockedRadius)
                 {
-                    blockedCells.Add(cell);
+                    char tile = MapProfile.NormalizeCell(matrix[cell.y, cell.x]);
+                    bool isPathTile = tile == 'p' || tile == 'P' || tile == 'S' || tile == 'E';
+                    if (isPathTile)
+                    {
+                        blockedCells.Add(cell);
+                    }
+
                     continue;
                 }
 

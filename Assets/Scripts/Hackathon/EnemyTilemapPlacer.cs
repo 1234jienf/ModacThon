@@ -549,6 +549,9 @@ public class TilemapEnemyAnimator : MonoBehaviour
         if (!isMoving || _spriteRenderer == null || frames == null || frames.Length <= 1 || framesPerSecond <= 0f)
             return;
 
+        if ((Time.frameCount + GetInstanceID()) % 2 != 0)
+            return;
+
         _timer += Time.deltaTime;
         float frameDuration = 1f / framesPerSecond;
         while (_timer >= frameDuration)

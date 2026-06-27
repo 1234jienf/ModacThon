@@ -83,7 +83,68 @@ public static class BridgeMapJsonUtility
         return new Vector3(data.startX + gridX + 0.5f, data.startY + gridY + 0.5f, 0f);
     }
 
-    public static bool TryFindBridgeEndpoints(char[,] grid, out Vector2Int start, out Vector2Int goal)
+    public static Vector2Int WorldToBridgeCell(InputMapData data, Vector3 worldPosition)
+    {
+        return new Vector2Int(
+            Mathf.RoundToInt(worldPosition.x - data.startX - 0.5f),
+            Mathf.RoundToInt(worldPosition.y - data.startY - 0.5f));
+    }
+
+    public static bool TrySnapToNearestPathCell(
+        InputMapData data,
+        char[,] grid,
+        Vector3 worldPosition,
+        out Vector2Int cell)
+    {
+        cell = default;
+        int height = grid.GetLength(0);
+        int width = grid.GetLength(1);
+        if (width <= 0 || height <= 0)
+        {
+            return false;
+        }
+
+        Vector2Int preferred = WorldToBridgeCell(data, worldPosition);
+        if (IsInside(grid, preferred) && IsPathTile(grid[preferred.y, preferred.x]))
+        {
+            cell = preferred;
+            return true;
+        }
+
+        float bestDistance = float.MaxValue;
+        bool found = false;
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                if (!IsPathTile(grid[y, x]))
+                {
+                    continue;
+                }
+
+                Vector3 cellWorld = GridCellToWorld(data, x, y);
+                float distance = Vector2.SqrMagnitude((Vector2)cellWorld - (Vector2)worldPosition);
+                if (distance >= bestDistance)
+                {
+                    continue;
+                }
+
+                bestDistance = distance;
+                cell = new Vector2Int(x, y);
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
+    public static bool TryResolveBridgeEndpoints(
+        InputMapData data,
+        char[,] grid,
+        Transform sceneStart,
+        Transform sceneGoal,
+        out Vector2Int start,
+        out Vector2Int goal)
     {
         start = default;
         goal = default;
@@ -112,13 +173,26 @@ public static class BridgeMapJsonUtility
             return false;
         }
 
-        if (TryFindMarker(grid, 'S', out start))
+        if (data != null &&
+            sceneStart != null &&
+            TrySnapToNearestPathCell(data, grid, sceneStart.position, out start))
+        {
+            // scene Start_point
+        }
+        else if (TryFindMarker(grid, 'S', out start))
         {
             // marked start
         }
         else
         {
             start = PickEdgePathCell(grid, minPathX);
+        }
+
+        if (data != null &&
+            sceneGoal != null &&
+            TrySnapToNearestPathCell(data, grid, sceneGoal.position, out goal))
+        {
+            return start != goal;
         }
 
         if (TryFindMarker(grid, 'E', out goal))
@@ -130,15 +204,37 @@ public static class BridgeMapJsonUtility
         return start != goal && IsPathTile(grid[start.y, start.x]) && IsPathTile(grid[goal.y, goal.x]);
     }
 
-    public static void MarkBridgeEndpoints(char[,] grid)
+    public static bool TryFindBridgeEndpoints(char[,] grid, out Vector2Int start, out Vector2Int goal)
     {
-        if (!TryFindBridgeEndpoints(grid, out Vector2Int start, out Vector2Int goal))
+        if (TryFindMarker(grid, 'S', out start) && TryFindMarker(grid, 'E', out goal))
+        {
+            return start != goal;
+        }
+
+        return TryResolveBridgeEndpoints(null, grid, null, null, out start, out goal);
+    }
+
+    public static void MarkBridgeEndpoints(
+        InputMapData data,
+        char[,] grid,
+        Transform sceneStart = null,
+        Transform sceneGoal = null)
+    {
+        if (!TryResolveBridgeEndpoints(data, grid, sceneStart, sceneGoal, out Vector2Int start, out Vector2Int goal))
         {
             return;
         }
 
         grid[start.y, start.x] = 'S';
         grid[goal.y, goal.x] = 'E';
+    }
+
+    private static bool IsInside(char[,] grid, Vector2Int cell)
+    {
+        return cell.x >= 0 &&
+               cell.y >= 0 &&
+               cell.x < grid.GetLength(1) &&
+               cell.y < grid.GetLength(0);
     }
 
     private static Vector2Int PickEdgePathCell(char[,] grid, int edgeX)

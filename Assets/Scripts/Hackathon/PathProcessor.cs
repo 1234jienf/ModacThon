@@ -161,7 +161,17 @@ public class PathProcessor : MonoBehaviour
         }
 
         // 3. 변환이 완료된 그리드를 최종 BridgeMapData_Path.json 파일로 저장
-        BridgeMapJsonUtility.MarkBridgeEndpoints(grid);
+        TryResolveMapProviders();
+        Transform sceneStart = mapAProvider != null && mapAProvider.startPoint != null
+            ? mapAProvider.startPoint.transform
+            : null;
+        Transform sceneGoal = mapAProvider != null && mapAProvider.goalPoint != null
+            ? mapAProvider.goalPoint.transform
+            : null;
+        if (sceneGoal == null && mapBProvider != null && mapBProvider.goalPoint != null)
+            sceneGoal = mapBProvider.goalPoint.transform;
+
+        BridgeMapJsonUtility.MarkBridgeEndpoints(originalData, grid, sceneStart, sceneGoal);
         int acceptedBlockers = ApplyMapBDifficultyBlockers(grid, w, h);
 
         OutputPathData outputData = new OutputPathData();
@@ -184,9 +194,9 @@ public class PathProcessor : MonoBehaviour
         Debug.Log($"[가공 완료] 비교용 전/후 이미지 및 JSON 데이터 저장 완료! (경로: {folderPath})");
         Debug.Log($"[PathProcessor] MapB difficulty blockers applied: {acceptedBlockers}");
 
-        TriggerBridgePathRunners();
         TriggerAsciiMapRenderers();
         TriggerEnemyPlacement();
+        TriggerBridgePathRunners();
         TriggerMapOverviewRefresh();
     }
 

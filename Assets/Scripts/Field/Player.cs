@@ -117,6 +117,9 @@ public class Player : MonoBehaviour
 
     void Start()
     {
+        if (ShouldSkipFieldStartup())
+            return;
+
         // 적용 시각이 0 초과 12미만이라면 그 쪽으로 보내고 없으면 초기 위치로 보낸다.
         if (0 < gameMgr.time && gameMgr.time < 12) {
             transform.position = new Vector3((float)gameMgr.lastXy[0], (float)gameMgr.lastXy[1], 0f);
@@ -165,9 +168,26 @@ public class Player : MonoBehaviour
         }
     }
 
+    private bool ShouldSkipFieldStartup()
+    {
+        if (FindObjectOfType<BridgeGameSession>() != null)
+            return true;
+
+        if (startPoint == null)
+        {
+            Debug.LogWarning("Player.startPoint is not assigned; skipping field startup (Hackathon/demo mode).");
+            return true;
+        }
+
+        return false;
+    }
+
     // Update is called once per frame
     void Update()
     {
+        if (ShouldSkipFieldStartup())
+            return;
+
         // 사망 상태가 아니고 게임 시간이 흐르는 상태라면 조작 수행
         if (!is_death && Time.timeScale > 0f) {
             // 수평/수직 Input 값

@@ -10,6 +10,7 @@ public class TilemapEnemyRoam : MonoBehaviour
     [SerializeField] private float moveTime = 2.5f;
     [SerializeField] private float restTime = 1.5f;
     [SerializeField] private float startDelayMax = 1.5f;
+    [SerializeField] private int updateStride = 3;
 
     private TilemapEnemyAnimator _animator;
     private TilemapEnemyWalkBounds _walkBounds;
@@ -20,6 +21,7 @@ public class TilemapEnemyRoam : MonoBehaviour
     private float _restStartTime;
     private float _startDelay;
     private bool _facingRight = true;
+    private int _updatePhase;
 
     public void Configure(float min, float max, float moveDuration, float restDuration, float delayMax)
     {
@@ -41,11 +43,15 @@ public class TilemapEnemyRoam : MonoBehaviour
         _startDelay = Random.Range(0f, startDelayMax);
         _restStartTime = Time.time;
         _isMoving = false;
+        _updatePhase = Mathf.Abs(GetInstanceID()) % Mathf.Max(1, updateStride);
         SetWalking(false);
     }
 
     private void Update()
     {
+        if (Time.frameCount % Mathf.Max(1, updateStride) != _updatePhase)
+            return;
+
         if (Time.time < _startDelay)
             return;
 
