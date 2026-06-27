@@ -171,8 +171,8 @@ public class BSP_Generator : MonoBehaviour
         {
             // Map_A에 가까울수록(progress가 0에 가까울수록) 분할 확률이 낮아짐
             // 예: progress가 0이면 0%, 중간(0.5)에 가까워질수록 설정한 최대 확률(45%)에 수렴
-            float maxProbabilityAtCenter = 0.45f;
-            float currentDivideProbability = Mathf.Lerp(0f, maxProbabilityAtCenter, progress / 0.5f);
+            float maxProbabilityAtCenter = 0.90f;
+            float currentDivideProbability = Mathf.Lerp(0.3f, maxProbabilityAtCenter, progress / 0.5f);
 
             if (Random.value > currentDivideProbability) return; // 확률을 뚫지 못하면 넓은 방으로 유지
         }
