@@ -227,6 +227,8 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         {
             case "#":
                 return GetWallDirectionalKey(tokenRows, row, x);
+            case "D":
+                return "blocker_wall";
             case "w":
                 baseKey = GetLakeSpriteKey(tokenRows, row, x);
                 break;
@@ -588,7 +590,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
     private Tilemap GetTilemapForSpriteKey(string spriteKey)
     {
-        if (spriteKey.StartsWith("stone_wall", StringComparison.Ordinal))
+        if (spriteKey == "blocker_wall" || spriteKey.StartsWith("stone_wall", StringComparison.Ordinal))
             return renderWallTiles ? GetLayerTilemap(wallTilemap) : null;
         if (spriteKey == "water" || spriteKey.StartsWith("w_", StringComparison.Ordinal))
             return renderLakeTiles ? GetLayerTilemap(lakeTilemap) : null;
@@ -718,6 +720,10 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         RegisterTileAsset("stone_wall_left_down_in", "Assets/modak_image_test/wall_left_down_in.asset");
 
         RegisterSprite("water", "water.png");
+        RegisterSpriteFromRelativePath(
+            "blocker_wall",
+            "Assets/Sprites/map/Tilesets/Wastelands/Sprites/RA_Wasteland.png",
+            "RA_Wasteland_19");
 
         // 0=L, 1=TL, 2=T, 3=TR, 4=R, 5=BR, 6=B, 7=BL, 8=C
         RegisterTileAsset("w_0", $"{LakeWaterAnimationsFolder}/Ani_Water 11.asset");
@@ -900,6 +906,20 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         if (sprite != null) _spriteLookup[key] = sprite;
     }
 
+    private void RegisterSpriteFromRelativePath(string key, string relativePath, string spriteName = null)
+    {
+        Sprite sprite = LoadSpriteFromRelativePath(relativePath, spriteName);
+        if (sprite != null)
+        {
+            _spriteLookup[key] = sprite;
+            _runtimeTiles.Remove(key);
+        }
+        else if (_missingSpriteWarnings.Add(key))
+        {
+            Debug.LogWarning($"Sprite not found at relative path: {relativePath} name={spriteName}");
+        }
+    }
+
     private Sprite LoadSprite(string fileName)
     {
         string assetPath = $"{imageAssetFolder.TrimEnd('/', '\\')}/{fileName}";
@@ -921,12 +941,18 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         return null;
     }
 
-    private Sprite LoadSpriteFromRelativePath(string relativePath)
+    private Sprite LoadSpriteFromRelativePath(string relativePath, string spriteName = null)
     {
         string normalizedRelativePath = relativePath.Replace('\\', '/');
 #if UNITY_EDITOR
         if (normalizedRelativePath.StartsWith("Assets/", StringComparison.Ordinal))
         {
+            if (!string.IsNullOrEmpty(spriteName))
+            {
+                Sprite namedSprite = FindNamedSpriteAtPath(normalizedRelativePath, spriteName);
+                if (namedSprite != null) return namedSprite;
+            }
+
             Sprite assetSprite = AssetDatabase.LoadAssetAtPath<Sprite>(normalizedRelativePath);
             if (assetSprite != null) return assetSprite;
         }
@@ -943,6 +969,20 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         Vector2 pivot = new Vector2(0.5f, 0.5f);
         return Sprite.Create(texture, rect, pivot, texture.width);
     }
+
+#if UNITY_EDITOR
+    private static Sprite FindNamedSpriteAtPath(string assetPath, string spriteName)
+    {
+        UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+        foreach (UnityEngine.Object asset in assets)
+        {
+            if (asset is Sprite sprite && sprite.name == spriteName)
+                return sprite;
+        }
+
+        return null;
+    }
+#endif
 
     private string GetInputText()
     {

@@ -29,6 +29,16 @@ public class PathProcessor : MonoBehaviour
     [Range(1, 3)] 
     [SerializeField] private int pathWidth = 2;
 
+    [Header("=== MapB Difficulty Blockers ===")]
+    [SerializeField] private bool applyMapBDifficultyBlockers = true;
+    [Range(0f, 1f)]
+    [SerializeField] private float blockerStartProgress = 0.45f;
+    [Range(0f, 1f)]
+    [SerializeField] private float blockerMaxChance = 0.7f;
+    [SerializeField] private int blockerClusterRadius = 1;
+    [SerializeField] private int maxAcceptedBlockers = 28;
+    [SerializeField] private int maxBlockerAttempts = 140;
+
     [Header("=== 이미지 출력 설정 ===")]
     [Tooltip("하나의 타일(점)을 가로세로 몇 픽셀로 표현할지 설정 (값이 클수록 고해상도)")]
     [Range(1, 32)]
@@ -55,6 +65,14 @@ public class PathProcessor : MonoBehaviour
     [SerializeField] private int pathAdjacentLakePatches = 0;
 
     public int PathAdjacentLakePatches => pathAdjacentLakePatches;
+
+    private static readonly Vector2Int[] FourDirections =
+    {
+        Vector2Int.up,
+        Vector2Int.down,
+        Vector2Int.left,
+        Vector2Int.right
+    };
 
     public void ApplyDifficultySettings(BridgeDifficultyPreset preset)
     {
@@ -138,6 +156,7 @@ public class PathProcessor : MonoBehaviour
 
         // 3. 변환이 완료된 그리드를 최종 BridgeMapData_Path.json 파일로 저장
         BridgeMapJsonUtility.MarkBridgeEndpoints(grid);
+        int acceptedBlockers = ApplyMapBDifficultyBlockers(grid, w, h);
 
         OutputPathData outputData = new OutputPathData();
         outputData.width = w;
@@ -157,6 +176,7 @@ public class PathProcessor : MonoBehaviour
         SaveAfterMapAsImage(grid, w, h, folderPath);
 
         Debug.Log($"[가공 완료] 비교용 전/후 이미지 및 JSON 데이터 저장 완료! (경로: {folderPath})");
+        Debug.Log($"[PathProcessor] MapB difficulty blockers applied: {acceptedBlockers}");
 
         TriggerBridgePathRunners();
         TriggerAsciiMapRenderers();
@@ -178,6 +198,169 @@ public class PathProcessor : MonoBehaviour
         settings.randomSeed = lakeRandomSeed;
         settings.pathAdjacentLakePatches = pathAdjacentLakePatches;
         return settings;
+    }
+
+    private int ApplyMapBDifficultyBlockers(char[,] grid, int w, int h)
+    {
+        if (!applyMapBDifficultyBlockers || w <= 1 || h <= 0)
+            return 0;
+
+        if (!BridgeMapJsonUtility.TryFindBridgeEndpoints(grid, out Vector2Int start, out Vector2Int goal))
+            return 0;
+
+        List<Vector2Int> candidates = CollectBlockerCandidates(grid, w, h, start, goal);
+        Shuffle(candidates);
+
+        int acceptedCount = 0;
+        int attempts = 0;
+        int safeMaxAccepted = Mathf.Max(0, maxAcceptedBlockers);
+        int safeMaxAttempts = Mathf.Max(0, maxBlockerAttempts);
+
+        foreach (Vector2Int candidate in candidates)
+        {
+            if (acceptedCount >= safeMaxAccepted || attempts >= safeMaxAttempts)
+                break;
+
+            attempts++;
+
+            if (!ShouldTryBlocker(candidate.x, w))
+                continue;
+
+            List<Vector2Int> changedCells = ApplyBlockerCluster(grid, candidate, start, goal);
+            if (changedCells.Count == 0)
+                continue;
+
+            if (!HasReachableRoute(grid, start, goal))
+            {
+                RestoreCells(grid, changedCells, 'P');
+                continue;
+            }
+
+            acceptedCount++;
+        }
+
+        return acceptedCount;
+    }
+
+    private List<Vector2Int> CollectBlockerCandidates(char[,] grid, int w, int h, Vector2Int start, Vector2Int goal)
+    {
+        List<Vector2Int> candidates = new List<Vector2Int>();
+        float startProgress = Mathf.Clamp01(blockerStartProgress);
+
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                Vector2Int cell = new Vector2Int(x, y);
+                if (cell == start || cell == goal || grid[y, x] != 'P')
+                    continue;
+
+                float progress = x / (float)(w - 1);
+                if (progress >= startProgress)
+                    candidates.Add(cell);
+            }
+        }
+
+        return candidates;
+    }
+
+    private bool ShouldTryBlocker(int x, int width)
+    {
+        float startProgress = Mathf.Clamp01(blockerStartProgress);
+        float progress = width <= 1 ? 0f : x / (float)(width - 1);
+        if (progress < startProgress)
+            return false;
+
+        float normalizedProgress = Mathf.InverseLerp(startProgress, 1f, progress);
+        float chance = Mathf.Lerp(0f, blockerMaxChance, normalizedProgress);
+        return Random.value <= chance;
+    }
+
+    private List<Vector2Int> ApplyBlockerCluster(char[,] grid, Vector2Int center, Vector2Int start, Vector2Int goal)
+    {
+        List<Vector2Int> changedCells = new List<Vector2Int>();
+        int radius = Mathf.Max(0, blockerClusterRadius);
+
+        for (int y = -radius; y <= radius; y++)
+        {
+            for (int x = -radius; x <= radius; x++)
+            {
+                Vector2Int cell = new Vector2Int(center.x + x, center.y + y);
+                if (!IsInside(grid, cell) || cell == start || cell == goal)
+                    continue;
+
+                if (Mathf.Abs(x) + Mathf.Abs(y) > radius)
+                    continue;
+
+                if (grid[cell.y, cell.x] != 'P')
+                    continue;
+
+                grid[cell.y, cell.x] = 'D';
+                changedCells.Add(cell);
+            }
+        }
+
+        return changedCells;
+    }
+
+    private static void RestoreCells(char[,] grid, List<Vector2Int> cells, char marker)
+    {
+        foreach (Vector2Int cell in cells)
+            grid[cell.y, cell.x] = marker;
+    }
+
+    private static void Shuffle(List<Vector2Int> cells)
+    {
+        for (int i = 0; i < cells.Count; i++)
+        {
+            int swapIndex = Random.Range(i, cells.Count);
+            Vector2Int temp = cells[i];
+            cells[i] = cells[swapIndex];
+            cells[swapIndex] = temp;
+        }
+    }
+
+    private static bool HasReachableRoute(char[,] grid, Vector2Int start, Vector2Int goal)
+    {
+        if (!IsInside(grid, start) || !IsInside(grid, goal))
+            return false;
+
+        bool[,] visited = new bool[grid.GetLength(0), grid.GetLength(1)];
+        Queue<Vector2Int> queue = new Queue<Vector2Int>();
+        queue.Enqueue(start);
+        visited[start.y, start.x] = true;
+
+        while (queue.Count > 0)
+        {
+            Vector2Int current = queue.Dequeue();
+            if (current == goal)
+                return true;
+
+            foreach (Vector2Int direction in FourDirections)
+            {
+                Vector2Int next = current + direction;
+                if (!IsInside(grid, next) || visited[next.y, next.x])
+                    continue;
+
+                if (!IsRouteWalkable(grid[next.y, next.x]))
+                    continue;
+
+                visited[next.y, next.x] = true;
+                queue.Enqueue(next);
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsRouteWalkable(char marker)
+    {
+        return BridgeMapJsonUtility.IsPathTile(marker);
+    }
+
+    private static bool IsInside(char[,] grid, Vector2Int cell)
+    {
+        return cell.x >= 0 && cell.x < grid.GetLength(1) && cell.y >= 0 && cell.y < grid.GetLength(0);
     }
 
     private void TryResolveMapProviders()
@@ -254,7 +437,7 @@ public class PathProcessor : MonoBehaviour
                 Color targetColor = colorWall;
                 char tile = grid[y, x];
 
-                if (tile == '#') targetColor = colorWall;
+                if (tile == '#' || tile == 'D') targetColor = colorWall;
                 else if (tile == '.') targetColor = colorRoom;
                 else if (tile == 'P') targetColor = colorGate;
 
@@ -300,7 +483,7 @@ public class PathProcessor : MonoBehaviour
                 Color targetColor = colorGround;
                 char tile = grid[y, x];
 
-                if (tile == '#') targetColor = colorWall;
+                if (tile == '#' || tile == 'D') targetColor = colorWall;
                 else if (tile == 'P') targetColor = colorPath;
                 else if (tile == 'G') targetColor = colorGround;
 
