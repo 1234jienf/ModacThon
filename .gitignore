@@ -46,4 +46,8 @@ Packages/packages-lock.json
 # Hackathon AI generated outputs
 HackathonAI/runs/
 HackathonAI/generated_images/
+HackathonAI/path_run_reports/
 __pycache__/
+
+# BSP / local generated map outputs
+tmpOutput/

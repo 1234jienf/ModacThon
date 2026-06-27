@@ -1,22 +1,10 @@
 using System;
 using System.IO;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class PathTileBlendExporter : MonoBehaviour
 {
-    private static readonly string[] TileNames =
-    {
-        "top_left",
-        "top",
-        "top_right",
-        "bottom_left",
-        "bottom",
-        "bottom_right",
-        "center"
-    };
-
     [Header("Input Providers")]
     public TilemapDataProvider mapAProvider;
     public TilemapDataProvider mapBProvider;
@@ -66,7 +54,7 @@ public class PathTileBlendExporter : MonoBehaviour
         {
             Debug.LogWarning(
                 $"{provider.gameObject.name}: path/ground/lake 타일이 비어 있어 source tile PNG를 만들지 못했습니다. " +
-                "TilemapDataProvider의 Path/Ground/Lake Tiles[0~6]을 채워 주세요."
+                "TilemapDataProvider의 Path/Ground[0~6], Lake[0~8]을 채워 주세요."
             );
             return null;
         }
@@ -91,7 +79,7 @@ public class PathTileBlendExporter : MonoBehaviour
         {
             Debug.LogWarning(
                 "블렌딩 타일 PNG를 만들지 못했습니다. Field 1 / Field 3의 TilemapDataProvider에 " +
-                "Path/Ground/Lake Tiles[0~6]을 모두 연결해 주세요."
+                "Path/Ground/Lake 타일을 연결해 주세요. Lake는 9칸(l,tl,t,tr,r,br,b,bl,c)입니다."
             );
         }
 
@@ -103,7 +91,8 @@ public class PathTileBlendExporter : MonoBehaviour
         string categoryDirectory = Path.Combine(tilesDirectory, category);
         int exportedCount = 0;
 
-        for (int i = 0; i < TileNames.Length; i++)
+        string[] slotNames = TileBlendLayouts.GetSlotNames(category);
+        for (int i = 0; i < slotNames.Length; i++)
         {
             Texture2D texture = RenderTile(GetTileAt(tiles, i), tileSize);
             if (texture == null)
@@ -112,7 +101,7 @@ public class PathTileBlendExporter : MonoBehaviour
             }
 
             Directory.CreateDirectory(categoryDirectory);
-            WriteTexture(texture, Path.Combine(categoryDirectory, $"{category}_{i:00}_{TileNames[i]}.png"));
+            WriteTexture(texture, Path.Combine(categoryDirectory, $"{category}_{i:00}_{slotNames[i]}.png"));
             Destroy(texture);
             exportedCount++;
         }
@@ -130,7 +119,8 @@ public class PathTileBlendExporter : MonoBehaviour
         string categoryDirectory = Path.Combine(outputDirectory, category);
         int exportedCount = 0;
 
-        for (int i = 0; i < TileNames.Length; i++)
+        string[] slotNames = TileBlendLayouts.GetSlotNames(category);
+        for (int i = 0; i < slotNames.Length; i++)
         {
             Texture2D textureA = RenderTile(GetTileAt(mapATiles, i), tileSize);
             Texture2D textureB = RenderTile(GetTileAt(mapBTiles, i), tileSize);
@@ -144,19 +134,19 @@ public class PathTileBlendExporter : MonoBehaviour
 
             if (textureA != null)
             {
-                WriteTexture(textureA, Path.Combine(categoryDirectory, $"source_a_{i:00}_{TileNames[i]}.png"));
+                WriteTexture(textureA, Path.Combine(categoryDirectory, $"source_a_{i:00}_{slotNames[i]}.png"));
                 exportedCount++;
             }
 
             if (textureB != null)
             {
-                WriteTexture(textureB, Path.Combine(categoryDirectory, $"source_b_{i:00}_{TileNames[i]}.png"));
+                WriteTexture(textureB, Path.Combine(categoryDirectory, $"source_b_{i:00}_{slotNames[i]}.png"));
                 exportedCount++;
             }
 
-            exportedCount += ExportBlend(category, textureA, textureB, 70, 30, categoryDirectory, i, tileSize);
-            exportedCount += ExportBlend(category, textureA, textureB, 50, 50, categoryDirectory, i, tileSize);
-            exportedCount += ExportBlend(category, textureA, textureB, 30, 70, categoryDirectory, i, tileSize);
+            exportedCount += ExportBlend(category, textureA, textureB, 70, 30, categoryDirectory, i, slotNames[i], tileSize);
+            exportedCount += ExportBlend(category, textureA, textureB, 50, 50, categoryDirectory, i, slotNames[i], tileSize);
+            exportedCount += ExportBlend(category, textureA, textureB, 30, 70, categoryDirectory, i, slotNames[i], tileSize);
 
             if (textureA != null)
             {
@@ -185,6 +175,7 @@ public class PathTileBlendExporter : MonoBehaviour
         int bPercent,
         string outputDirectory,
         int index,
+        string slotName,
         int tileSize)
     {
         Texture2D blended = BlendTextures(textureA, textureB, aPercent / 100f, tileSize);
@@ -193,7 +184,7 @@ public class PathTileBlendExporter : MonoBehaviour
             return 0;
         }
 
-        string fileName = $"{category}_{index:00}_{TileNames[index]}_a_{aPercent}_b_{bPercent}.png";
+        string fileName = $"{category}_{index:00}_{slotName}_a_{aPercent}_b_{bPercent}.png";
         WriteTexture(blended, Path.Combine(outputDirectory, fileName));
         Destroy(blended);
         return 1;
@@ -251,33 +242,7 @@ public class PathTileBlendExporter : MonoBehaviour
 
     private static Sprite GetTileSprite(TileBase tile)
     {
-        if (tile == null)
-        {
-            return null;
-        }
-
-        if (tile is UnityEngine.Tilemaps.Tile simpleTile)
-        {
-            return simpleTile.sprite;
-        }
-
-        FieldInfo spriteField = tile.GetType().GetField(
-            "m_Sprite",
-            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
-        );
-        if (spriteField != null && spriteField.GetValue(tile) is Sprite fieldSprite)
-        {
-            return fieldSprite;
-        }
-
-        PropertyInfo spriteProperty = tile.GetType().GetProperty("sprite", BindingFlags.Instance | BindingFlags.Public);
-        if (spriteProperty != null && spriteProperty.GetValue(tile) is Sprite propertySprite)
-        {
-            return propertySprite;
-        }
-
-        // Debug.LogWarning($"타일 '{tile.name}'에서 Sprite를 찾지 못했습니다. ({tile.GetType().Name})");
-        return null;
+        return TileSpriteUtility.GetSprite(tile);
     }
 
     private static Color[] ScalePixels(Texture2D source, int width, int height)

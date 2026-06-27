@@ -407,12 +407,7 @@ public class BSP_Generator : MonoBehaviour
         jsonData.width = w; jsonData.height = h;
         jsonData.startX = finalBridgeZone.x; jsonData.startY = finalBridgeZone.y;
 
-        for (int y = 0; y < h; y++)
-        {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            for (int x = 0; x < w; x++) sb.Append(grid[y, x]);
-            jsonData.mapGrid.Add(sb.ToString());
-        }
+        BridgeMapJsonUtility.WriteGridRowsTopFirst(jsonData.mapGrid, grid);
 
         string jsonString = JsonUtility.ToJson(jsonData, true);
         string projectRoot = Directory.GetParent(Application.dataPath).FullName;
