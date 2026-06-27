@@ -1,0 +1,3515 @@
+fileFormatVersion: 2
+guid: 35db49e2d93df41448d404db46bd51f1
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: food-bluecarrot16_0
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 389
+        width: 25
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6d07e769c116fa94fbd74d3196925d55
+      internalID: 1634265800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_1
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 391
+        width: 30
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c7d2ac3431deb848952034fb100f4ac
+      internalID: 651437348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_2
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 391
+        width: 22
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8a6c938dfaf88b641ab2553bcf5c9969
+      internalID: -1526817298
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_3
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 391
+        width: 23
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e18c74070d1ec3d46b30263a3951b1c3
+      internalID: -981071013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_4
+      rect:
+        serializedVersion: 2
+        x: 129
+        y: 389
+        width: 29
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4aced7651fad3a0438b4687c9e8eb4e5
+      internalID: 130200339
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_5
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 388
+        width: 26
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 611e151b81ed98b4fb234681df27def9
+      internalID: 360581952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_6
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 391
+        width: 23
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: de26d54bf2419c64993fd18552850f9d
+      internalID: -2042803154
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_7
+      rect:
+        serializedVersion: 2
+        x: 229
+        y: 393
+        width: 21
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e96867c68d73ed846911214459ba8d26
+      internalID: 1724522501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_8
+      rect:
+        serializedVersion: 2
+        x: 259
+        y: 390
+        width: 26
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 50b79c18d619cb642aaeb6970f4fbcc4
+      internalID: 1993782646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_9
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 396
+        width: 11
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bf00677ef73dde14fac13eae347a818e
+      internalID: 1617726688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_10
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 390
+        width: 11
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fca7e710f7902b342b3046dc6e1bce57
+      internalID: -1664682240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_11
+      rect:
+        serializedVersion: 2
+        x: 8
+        y: 362
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f1748f42af819b440b6654b0969871ef
+      internalID: 1418360904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_12
+      rect:
+        serializedVersion: 2
+        x: 35
+        y: 353
+        width: 25
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cff4e793c991947489ffed06a65c7181
+      internalID: -576476030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_13
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 355
+        width: 23
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b776f22d91011164db0badc5eabcba17
+      internalID: 128040601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_14
+      rect:
+        serializedVersion: 2
+        x: 101
+        y: 353
+        width: 21
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9130b8c4e9c760641b79a4a9f6b4872c
+      internalID: 1358089657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_15
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 371
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ebd3138ddf725041b49b3a2afd0c1f8
+      internalID: -127252503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_16
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 364
+        width: 15
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 67ba28da4fba4bc49bf470edce096bec
+      internalID: -2062774893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_17
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 358
+        width: 22
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d02bb6c7c8eb45143a1601a4e78f57c0
+      internalID: 374486052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_18
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 356
+        width: 23
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e2220867904f0174da6e18d021630773
+      internalID: -2118797836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_19
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 354
+        width: 25
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 213b73204889d1742955c6a0be9bd1da
+      internalID: 1073148639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_20
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 364
+        width: 10
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e0eb5ba1ac89c8f4288d1cef95bf41b1
+      internalID: 1704126767
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_21
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 364
+        width: 10
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e54af0405d5898d4d9ca4ee025909244
+      internalID: 903745200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_22
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 362
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bb763c36d62ef3d479cc8ede77b7996c
+      internalID: -1026095314
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_23
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 353
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f1a440c397f9e0a44979b690ee1d5f03
+      internalID: 1595457168
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_24
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 359
+        width: 10
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 332f02ef834bfc1479774e1812dc85f8
+      internalID: 1877486789
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_25
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 359
+        width: 10
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e2ad02fc5a27de489e8361ef75fb9b7
+      internalID: 2132696207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_26
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 336
+        width: 22
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0eaf671131d75924c9d49f6cdbbf4b64
+      internalID: 1741678194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_27
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 332
+        width: 10
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 99a7b631659376141a354e9037462857
+      internalID: -1672697939
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_28
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 327
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4d05ed0c3695dfe4ab9f3ca77a0969f9
+      internalID: -21958038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_29
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 330
+        width: 24
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9cf001b2b1cb38348a45cab65fb070a9
+      internalID: -734442093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_30
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 328
+        width: 15
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a94303b73d948441820dad30f58ceff
+      internalID: -1502012462
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_31
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 329
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 34c3ff7dc4b3f0e4bb46b287f9f17781
+      internalID: -52156133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_32
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 325
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 456fc25c0684cb14585e0be2c9a93fad
+      internalID: 208729345
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_33
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 325
+        width: 20
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2d927472b0c3abd439323b4ee590cc8d
+      internalID: 1668685176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_34
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 325
+        width: 24
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: da44beca353e9e04f9a4c6a11855f9e2
+      internalID: 1033505640
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_35
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 325
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 934f3a00001c002428d794197a53717d
+      internalID: -1005736992
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_36
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 325
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c32ca95aa291a1a4ba165e6798de7941
+      internalID: -678902392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_37
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 326
+        width: 22
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a387db3abc7b5db499c7830ef1e431f8
+      internalID: -820144429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_38
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 295
+        width: 19
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d26a7cd1af482b7409b68f72b878ca2e
+      internalID: -478082608
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_39
+      rect:
+        serializedVersion: 2
+        x: 42
+        y: 294
+        width: 12
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a60f31bb4d928a448b4e10d2975e130d
+      internalID: 1192632247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_40
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 294
+        width: 12
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a6574048dda10104892af4a79d587d1f
+      internalID: -1548862474
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_41
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 295
+        width: 19
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f4c1c42188cfb564cae96de17bbc8a4a
+      internalID: 1510710896
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_42
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 295
+        width: 19
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b4adbe27bf63671448fb48123feb0e18
+      internalID: -1950093613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_43
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 292
+        width: 16
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ac4bc250461e73c418fefb57195dba79
+      internalID: 578458802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_44
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 296
+        width: 23
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 23bca562592597e458836b7e31fde70b
+      internalID: 1587589517
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_45
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 299
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 40d1c797bb939864f9e3fd5cf711a977
+      internalID: 364367571
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_46
+      rect:
+        serializedVersion: 2
+        x: 260
+        y: 300
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 791510eaf55da314b8f29d8816048597
+      internalID: -1090472382
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_47
+      rect:
+        serializedVersion: 2
+        x: 273
+        y: 306
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c9e27c61426e94b43a4ce2535bdfa625
+      internalID: -30560454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_48
+      rect:
+        serializedVersion: 2
+        x: 297
+        y: 294
+        width: 13
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e4e901664cdf44a46b12b47f6e5d01a0
+      internalID: 946600938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_49
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 292
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e751fc1462500924b9a0e381be2237bc
+      internalID: -1416628364
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_50
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 266
+        width: 18
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c0c6f2c99d3020d49a3d859ad42895ef
+      internalID: -1244848699
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_51
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 264
+        width: 18
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8478cb37acf58494c8f1b6318c2bd1e2
+      internalID: 1485714230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_52
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 264
+        width: 18
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4c9a209739e84af4189833155b4c43fa
+      internalID: 48391495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_53
+      rect:
+        serializedVersion: 2
+        x: 101
+        y: 261
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: da065948f311ba04a8fb14dc8a652f13
+      internalID: 790295884
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_54
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 263
+        width: 19
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b30bc7dcb305d3f46ba1243f58a697d7
+      internalID: 206650463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_55
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 261
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fdb6aa50ff8995644b79917496c3f64f
+      internalID: 387483009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_56
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 263
+        width: 19
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d9ea9b58f6080684aae9becbd7032b2e
+      internalID: 1055784025
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_57
+      rect:
+        serializedVersion: 2
+        x: 225
+        y: 258
+        width: 29
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ac3a1b78029f9042b1f49c2d6d56b2c
+      internalID: 1844965580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_58
+      rect:
+        serializedVersion: 2
+        x: 260
+        y: 262
+        width: 23
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6658de8971372f54698c72ef7c88d70d
+      internalID: -1755829232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_59
+      rect:
+        serializedVersion: 2
+        x: 294
+        y: 256
+        width: 19
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f0a308b8e3f0086479969acff21c1479
+      internalID: -1349621799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_60
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 234
+        width: 18
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fa95bbd05eded5544b168bbac00ff5fb
+      internalID: 1491549758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_61
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 227
+        width: 27
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 77722c7c82e6bce469cea47fc909dd0b
+      internalID: -192835071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_62
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 233
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ef271f777d24cb74f8842a1f093b4fae
+      internalID: -1530420390
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_63
+      rect:
+        serializedVersion: 2
+        x: 101
+        y: 231
+        width: 22
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a0e4746853713640979a0a32dd5c366
+      internalID: 431023418
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_64
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 239
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e1a1ed52112429e49926fc9cac62a00b
+      internalID: -1010129728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_65
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 232
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4fa38b760318d634ba94c3cf5bf70c13
+      internalID: 2074718998
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_66
+      rect:
+        serializedVersion: 2
+        x: 161
+        y: 238
+        width: 21
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 40488665ec4d14547ad8247827668129
+      internalID: -293551389
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_67
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 231
+        width: 23
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a281f2e8444cb34d9a7abee269e773c
+      internalID: 1798431283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_68
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 230
+        width: 30
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9a316293d315cea46873e4216663807b
+      internalID: -112037040
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_69
+      rect:
+        serializedVersion: 2
+        x: 230
+        y: 231
+        width: 20
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8b9d89d02e33859438558bc94b0a596f
+      internalID: 1803967753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_70
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 224
+        width: 32
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9860df4cb46f830438e707ebabfcf390
+      internalID: -251961765
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_71
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 226
+        width: 31
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5bed6154c9afa294bb8177ff295bab63
+      internalID: 867305560
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_72
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 231
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 75fbeed5d0239f0498f64bf69c8cba53
+      internalID: 824631474
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_73
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 198
+        width: 25
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4dd991588c8f633458ab40417ea43db4
+      internalID: 1031947554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_74
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 195
+        width: 19
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7d028c3705bb9244ca56fc23dcb9de27
+      internalID: -1658787590
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_75
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 207
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0c120bc53afc34d469964c9c989a7b1a
+      internalID: -870298412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_76
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 209
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8d5c37b88a6635d48a4069b933b3543d
+      internalID: -715451029
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_77
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 196
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 306c6f7143e63764eb8d4a888a4ba94a
+      internalID: -5715811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_78
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 197
+        width: 20
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6f4a0473fab810a4eb97ac361863d057
+      internalID: 1076193606
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_79
+      rect:
+        serializedVersion: 2
+        x: 166
+        y: 207
+        width: 17
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0dba7b6609538bf44b669eb1fc573b2d
+      internalID: -3181333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_80
+      rect:
+        serializedVersion: 2
+        x: 198
+        y: 200
+        width: 20
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6e53a5e2a13f8a549ababb45ae0555f0
+      internalID: -1067605949
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_81
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 196
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 069906f8bb9a4ad4ca5324312430aec4
+      internalID: -357531947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_82
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 193
+        width: 29
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6c1033359d71710408d66c604cb45d5d
+      internalID: 552662699
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_83
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 196
+        width: 26
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0d8122af6577f8f45961ba7df92b5abb
+      internalID: -1177616192
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_84
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 199
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cb3b35666fdd6594ea3130ed67a99e6f
+      internalID: 832273050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_85
+      rect:
+        serializedVersion: 2
+        x: 162
+        y: 194
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 70210dd7c986e484ba15e0a81ee65ae0
+      internalID: 78541073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_86
+      rect:
+        serializedVersion: 2
+        x: 177
+        y: 195
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9c1ad000e9d581a4cb1099943070d8dc
+      internalID: 1956318324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_87
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 164
+        width: 28
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 83f71174a839fd645be9cef372b88d12
+      internalID: -1645497676
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_88
+      rect:
+        serializedVersion: 2
+        x: 35
+        y: 163
+        width: 25
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 95a842fd1d80b81409273190d3fb4005
+      internalID: 1714751353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_89
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 162
+        width: 29
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4f7dd742497b3124f8c2e61472e85778
+      internalID: -39666668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_90
+      rect:
+        serializedVersion: 2
+        x: 101
+        y: 165
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a28e44aa27fec744983f3ee757c87395
+      internalID: 726203952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_91
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 164
+        width: 24
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ba7b0f5efcb90545b3ad07270c3e5a8
+      internalID: -744670438
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_92
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 166
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5acb79b8e2c0b184d8d62ee78ea61dec
+      internalID: 470545374
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_93
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 168
+        width: 17
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 978e941de12d40f4792678ea1a30c052
+      internalID: 885378793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_94
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 168
+        width: 17
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 94253a1e72f64ef41af4ca06f28966c1
+      internalID: 585399392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_95
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 160
+        width: 27
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d3d2a6b8c96bf384f9b859b8a0e5120a
+      internalID: -2104235316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_96
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 165
+        width: 26
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c25a1861d0c222f45947e6162b62682e
+      internalID: -1855822854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_97
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 133
+        width: 26
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 92c613874b53f9543acfc456f5416013
+      internalID: 294975849
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_98
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 137
+        width: 29
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3537c9deabec96b419da96f181fc620c
+      internalID: 2030816832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_99
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 136
+        width: 25
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 666bf0e3dcdecb947ba654417a59c18f
+      internalID: 1767231063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_100
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 139
+        width: 18
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3211a5c5a1f09ef4281b9378c495e671
+      internalID: 2045727667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_101
+      rect:
+        serializedVersion: 2
+        x: 129
+        y: 136
+        width: 30
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 604e8989602c3a24dbe01dd908ac0a36
+      internalID: -190794223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_102
+      rect:
+        serializedVersion: 2
+        x: 162
+        y: 137
+        width: 29
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3f0b5c97e392fac48a4459047911f6e9
+      internalID: -1400749106
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_103
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 137
+        width: 31
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 30857881b5e27424380a48b3dd72aa15
+      internalID: 730033502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_104
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 132
+        width: 32
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 77b5ad5749b8b4e4ca52e05a9b73b73e
+      internalID: -1739294070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_105
+      rect:
+        serializedVersion: 2
+        x: 257
+        y: 136
+        width: 31
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 868738b6b160af64b8f147e72f67d4d4
+      internalID: 1697607678
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_106
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d54351d6523f1e84a811e7dc2afe83a8
+      internalID: -1105780724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_107
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 101
+        width: 29
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6030ac77ee1d85f49a4d3ff8e580cf73
+      internalID: 1490377003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_108
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 104
+        width: 32
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7e1073606d4fef14fa917809a53745ef
+      internalID: -1258257740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_109
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 112
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2e178fff3e03aeb4f85b68ba1cfe670b
+      internalID: 1368891779
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_110
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 110
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9fe8703e1aa479f409df98dbada00890
+      internalID: 1687596046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_111
+      rect:
+        serializedVersion: 2
+        x: 98
+        y: 99
+        width: 28
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b4acc16ea5bd4244caa4e0b59a927e07
+      internalID: 1578552368
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_112
+      rect:
+        serializedVersion: 2
+        x: 130
+        y: 111
+        width: 17
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d3e5eedc812a11749b4ad089cc176560
+      internalID: -1678716696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_113
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 97
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b4ee4788a3015ed4e9a3915632e42f7a
+      internalID: -1882798720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_114
+      rect:
+        serializedVersion: 2
+        x: 164
+        y: 100
+        width: 25
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e3a73efad3a274c4883b44dc11018360
+      internalID: 1551237370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_115
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 100
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4b29f588e8e23254b9d137427423b957
+      internalID: -168177374
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_116
+      rect:
+        serializedVersion: 2
+        x: 232
+        y: 99
+        width: 16
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fca8fcd43e20a40418e87dca26fd1a3e
+      internalID: 1137579407
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_117
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 96
+        width: 19
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea69573f9ca097d42a0d05226e4cecba
+      internalID: -1037303909
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_118
+      rect:
+        serializedVersion: 2
+        x: 289
+        y: 98
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: abf6df52f0c5d774abb76d80bc773952
+      internalID: -1176007860
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_119
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 102
+        width: 16
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f3fffe88db335e340acedea755cc3ecf
+      internalID: 2113430091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_120
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 98
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 98544c53580e5e04381a934bc8a38fdd
+      internalID: 1982559003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_121
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 71
+        width: 18
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9159a0ea534080a44a29d9d7f71e44ae
+      internalID: -24949765
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_122
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 71
+        width: 18
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6f9e658babbe74c4fa28633831178aeb
+      internalID: -1360209396
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_123
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 67
+        width: 21
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0414e59440ef00a47980b070a96357c8
+      internalID: 1595604381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_124
+      rect:
+        serializedVersion: 2
+        x: 98
+        y: 66
+        width: 27
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 64ab9398175dd534c9cd4b3dee421d5f
+      internalID: 600122445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_125
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 69
+        width: 25
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c041858e5999077428ebf77a1abe9d1b
+      internalID: -524311254
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_126
+      rect:
+        serializedVersion: 2
+        x: 202
+        y: 87
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fbbd3db35078bc145b6bbe53a66c385f
+      internalID: 1449309285
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_127
+      rect:
+        serializedVersion: 2
+        x: 211
+        y: 77
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b45b4bd91c1a19e408ab7950bad198df
+      internalID: 809574805
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_128
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 71
+        width: 18
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c099ed9a9f09da6479e384c957291615
+      internalID: -50013493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_129
+      rect:
+        serializedVersion: 2
+        x: 260
+        y: 66
+        width: 24
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 83fa73a2541b18d44ad6bdbd633c8123
+      internalID: 972609423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_130
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 66
+        width: 22
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 686c8c2f996794345b15dd816c5a0a13
+      internalID: 1863876608
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_131
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 73
+        width: 18
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 509b557d3c316844f8796e5c3c6fd31c
+      internalID: 773202642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_132
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 78
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: caa9ede1f6e18e249b73d65227fa0bbe
+      internalID: 747918660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_133
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 66
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b1ae09b339bb59c4582c3c31b3447a61
+      internalID: -1376730818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_134
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 65
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5aa07a3b70cf94c4cbf447dcb7d32a8d
+      internalID: 1395120273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_135
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 35
+        width: 22
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9db93491b3743ef468208c59748a5af2
+      internalID: -1628142105
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_136
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 35
+        width: 20
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7fa5847f7f01974458fd9d21fe8a7219
+      internalID: 1840080346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_137
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 37
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b106201f68f52974c959abc67eeddf52
+      internalID: -118810462
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_138
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 37
+        width: 19
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c3fcd2de0ef05a945b809fecbda1b191
+      internalID: -799394834
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_139
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 36
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9c4f9b8578da3c642b8ce3e0165aa1b5
+      internalID: -124446535
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_140
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 37
+        width: 22
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ece68104cfd881e43ba478dc5561c33d
+      internalID: 1287016488
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_141
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 39
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e8d4e02bc84603040b77513bb2ec328f
+      internalID: -794963727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_142
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 40
+        width: 17
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 79c661ea22f70674e8a06484ee373c24
+      internalID: -801454767
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_143
+      rect:
+        serializedVersion: 2
+        x: 260
+        y: 47
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 242a30423d61b3346a947f99101642e6
+      internalID: -2120415434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_144
+      rect:
+        serializedVersion: 2
+        x: 267
+        y: 38
+        width: 16
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 321e6160272c5ff40a87ddc7733b5764
+      internalID: 705775850
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_145
+      rect:
+        serializedVersion: 2
+        x: 277
+        y: 50
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e9aba0924c64e644d8f9c158a218361f
+      internalID: 698553793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_146
+      rect:
+        serializedVersion: 2
+        x: 295
+        y: 40
+        width: 17
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3f4414b6fbc7dfc45bbc45751bab9915
+      internalID: 1196802280
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_147
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 39
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eee85927a0f750042b85f3da1ff7ce74
+      internalID: 1679911095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_148
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 8
+        width: 17
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a88acb255e6a865489ddfecded503396
+      internalID: 241124889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_149
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 6
+        width: 17
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 53d9b62173cfa5247b7dfef86251db9b
+      internalID: -1231307773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_150
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 7
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dfbad64daf3a327448ea71d962500c53
+      internalID: 430520513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_151
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 5
+        width: 24
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a679eb3e90eecf7478c77c39906b1665
+      internalID: 322421057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_152
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 11
+        width: 60
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7590b37a86c9eae4b9c03a6e5450ce67
+      internalID: -2776887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: food-bluecarrot16_153
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 11
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c65aaa7285f335142bf8f3af5190ed63
+      internalID: 827805243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      food-bluecarrot16_0: 1634265800
+      food-bluecarrot16_1: 651437348
+      food-bluecarrot16_10: -1664682240
+      food-bluecarrot16_100: 2045727667
+      food-bluecarrot16_101: -190794223
+      food-bluecarrot16_102: -1400749106
+      food-bluecarrot16_103: 730033502
+      food-bluecarrot16_104: -1739294070
+      food-bluecarrot16_105: 1697607678
+      food-bluecarrot16_106: -1105780724
+      food-bluecarrot16_107: 1490377003
+      food-bluecarrot16_108: -1258257740
+      food-bluecarrot16_109: 1368891779
+      food-bluecarrot16_11: 1418360904
+      food-bluecarrot16_110: 1687596046
+      food-bluecarrot16_111: 1578552368
+      food-bluecarrot16_112: -1678716696
+      food-bluecarrot16_113: -1882798720
+      food-bluecarrot16_114: 1551237370
+      food-bluecarrot16_115: -168177374
+      food-bluecarrot16_116: 1137579407
+      food-bluecarrot16_117: -1037303909
+      food-bluecarrot16_118: -1176007860
+      food-bluecarrot16_119: 2113430091
+      food-bluecarrot16_12: -576476030
+      food-bluecarrot16_120: 1982559003
+      food-bluecarrot16_121: -24949765
+      food-bluecarrot16_122: -1360209396
+      food-bluecarrot16_123: 1595604381
+      food-bluecarrot16_124: 600122445
+      food-bluecarrot16_125: -524311254
+      food-bluecarrot16_126: 1449309285
+      food-bluecarrot16_127: 809574805
+      food-bluecarrot16_128: -50013493
+      food-bluecarrot16_129: 972609423
+      food-bluecarrot16_13: 128040601
+      food-bluecarrot16_130: 1863876608
+      food-bluecarrot16_131: 773202642
+      food-bluecarrot16_132: 747918660
+      food-bluecarrot16_133: -1376730818
+      food-bluecarrot16_134: 1395120273
+      food-bluecarrot16_135: -1628142105
+      food-bluecarrot16_136: 1840080346
+      food-bluecarrot16_137: -118810462
+      food-bluecarrot16_138: -799394834
+      food-bluecarrot16_139: -124446535
+      food-bluecarrot16_14: 1358089657
+      food-bluecarrot16_140: 1287016488
+      food-bluecarrot16_141: -794963727
+      food-bluecarrot16_142: -801454767
+      food-bluecarrot16_143: -2120415434
+      food-bluecarrot16_144: 705775850
+      food-bluecarrot16_145: 698553793
+      food-bluecarrot16_146: 1196802280
+      food-bluecarrot16_147: 1679911095
+      food-bluecarrot16_148: 241124889
+      food-bluecarrot16_149: -1231307773
+      food-bluecarrot16_15: -127252503
+      food-bluecarrot16_150: 430520513
+      food-bluecarrot16_151: 322421057
+      food-bluecarrot16_152: -2776887
+      food-bluecarrot16_153: 827805243
+      food-bluecarrot16_16: -2062774893
+      food-bluecarrot16_17: 374486052
+      food-bluecarrot16_18: -2118797836
+      food-bluecarrot16_19: 1073148639
+      food-bluecarrot16_2: -1526817298
+      food-bluecarrot16_20: 1704126767
+      food-bluecarrot16_21: 903745200
+      food-bluecarrot16_22: -1026095314
+      food-bluecarrot16_23: 1595457168
+      food-bluecarrot16_24: 1877486789
+      food-bluecarrot16_25: 2132696207
+      food-bluecarrot16_26: 1741678194
+      food-bluecarrot16_27: -1672697939
+      food-bluecarrot16_28: -21958038
+      food-bluecarrot16_29: -734442093
+      food-bluecarrot16_3: -981071013
+      food-bluecarrot16_30: -1502012462
+      food-bluecarrot16_31: -52156133
+      food-bluecarrot16_32: 208729345
+      food-bluecarrot16_33: 1668685176
+      food-bluecarrot16_34: 1033505640
+      food-bluecarrot16_35: -1005736992
+      food-bluecarrot16_36: -678902392
+      food-bluecarrot16_37: -820144429
+      food-bluecarrot16_38: -478082608
+      food-bluecarrot16_39: 1192632247
+      food-bluecarrot16_4: 130200339
+      food-bluecarrot16_40: -1548862474
+      food-bluecarrot16_41: 1510710896
+      food-bluecarrot16_42: -1950093613
+      food-bluecarrot16_43: 578458802
+      food-bluecarrot16_44: 1587589517
+      food-bluecarrot16_45: 364367571
+      food-bluecarrot16_46: -1090472382
+      food-bluecarrot16_47: -30560454
+      food-bluecarrot16_48: 946600938
+      food-bluecarrot16_49: -1416628364
+      food-bluecarrot16_5: 360581952
+      food-bluecarrot16_50: -1244848699
+      food-bluecarrot16_51: 1485714230
+      food-bluecarrot16_52: 48391495
+      food-bluecarrot16_53: 790295884
+      food-bluecarrot16_54: 206650463
+      food-bluecarrot16_55: 387483009
+      food-bluecarrot16_56: 1055784025
+      food-bluecarrot16_57: 1844965580
+      food-bluecarrot16_58: -1755829232
+      food-bluecarrot16_59: -1349621799
+      food-bluecarrot16_6: -2042803154
+      food-bluecarrot16_60: 1491549758
+      food-bluecarrot16_61: -192835071
+      food-bluecarrot16_62: -1530420390
+      food-bluecarrot16_63: 431023418
+      food-bluecarrot16_64: -1010129728
+      food-bluecarrot16_65: 2074718998
+      food-bluecarrot16_66: -293551389
+      food-bluecarrot16_67: 1798431283
+      food-bluecarrot16_68: -112037040
+      food-bluecarrot16_69: 1803967753
+      food-bluecarrot16_7: 1724522501
+      food-bluecarrot16_70: -251961765
+      food-bluecarrot16_71: 867305560
+      food-bluecarrot16_72: 824631474
+      food-bluecarrot16_73: 1031947554
+      food-bluecarrot16_74: -1658787590
+      food-bluecarrot16_75: -870298412
+      food-bluecarrot16_76: -715451029
+      food-bluecarrot16_77: -5715811
+      food-bluecarrot16_78: 1076193606
+      food-bluecarrot16_79: -3181333
+      food-bluecarrot16_8: 1993782646
+      food-bluecarrot16_80: -1067605949
+      food-bluecarrot16_81: -357531947
+      food-bluecarrot16_82: 552662699
+      food-bluecarrot16_83: -1177616192
+      food-bluecarrot16_84: 832273050
+      food-bluecarrot16_85: 78541073
+      food-bluecarrot16_86: 1956318324
+      food-bluecarrot16_87: -1645497676
+      food-bluecarrot16_88: 1714751353
+      food-bluecarrot16_89: -39666668
+      food-bluecarrot16_9: 1617726688
+      food-bluecarrot16_90: 726203952
+      food-bluecarrot16_91: -744670438
+      food-bluecarrot16_92: 470545374
+      food-bluecarrot16_93: 885378793
+      food-bluecarrot16_94: 585399392
+      food-bluecarrot16_95: -2104235316
+      food-bluecarrot16_96: -1855822854
+      food-bluecarrot16_97: 294975849
+      food-bluecarrot16_98: 2030816832
+      food-bluecarrot16_99: 1767231063
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
