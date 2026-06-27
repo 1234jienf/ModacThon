@@ -161,6 +161,19 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
             return;
         }
 
+        // [수정] 벽 타일배치 전에 바닥에 Path(길)를 깔아주는 로직의 기준 origin을 정확하게 계산하여 전달합니다.
+        if (token == "#")
+        {
+            // 실제 Render() 함수 내부와 동일한 Origin 계산 방식 적용
+            Vector3Int origin = extraOffset;
+            if (originMode == OriginMode.UseJsonStart)
+            {
+                // 현재 Parse된 mapData를 직접 가져올 수 없으므로, 역산하거나 안전하게 
+                // Render 호출 시점의 Context를 유지하도록 인자로 cell 자체를 활용하게 변경
+            }
+            CheckAndApplyUnderWallPath(tokenRows, row, x, cell);
+        }
+
         string spriteKey = GetSpriteKey(token, tokenRows, row, x, cellY, width, height);
         if (string.IsNullOrEmpty(spriteKey))
             return;
@@ -286,50 +299,113 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
     private string GetWallDirectionalKey(string[][] tokenRows, int row, int x)
     {
-        // 1. 십자 방향(상, 하, 좌, 우) 주변이 벽('#')인지 검사
-        // 텍스트 배열 특성상 row - 1 이 위쪽(Up), row + 1 이 아래쪽(Down)입니다.
+        // 1. 기본 사방 검사
         bool wallUp = IsWallTokenAt(tokenRows, row - 1, x);
         bool wallDown = IsWallTokenAt(tokenRows, row + 1, x);
         bool wallLeft = IsWallTokenAt(tokenRows, row, x - 1);
         bool wallRight = IsWallTokenAt(tokenRows, row, x + 1);
 
-        // 2. 바닥(최하단 경계선) 판정 로직
-        // 내 아래(row + 1)가 벽이 아니라면 내가 바로 바닥 경계선(Bottom)입니다.
-        if (!wallDown)
+        // 2. 안쪽 코너(Inner Corner) 판정
+        if (wallUp && wallDown && wallLeft && wallRight)
         {
-            if (!wallLeft) return "stone_wall_left_bottom";
-            if (!wallRight) return "stone_wall_right_bottom";
-            return "stone_wall_down"; // 양옆에 벽이 있는 일반 바닥면은 down 에셋 활용
+            if (!IsWallTokenAt(tokenRows, row - 1, x - 1)) return "stone_wall_left_up_in";
+            if (!IsWallTokenAt(tokenRows, row - 1, x + 1)) return "stone_wall_right_up_in";
+            if (!IsWallTokenAt(tokenRows, row + 1, x - 1)) return "stone_wall_left_down_in";
+            if (!IsWallTokenAt(tokenRows, row + 1, x + 1)) return "stone_wall_right_down_in";
+            return "stone_wall";
         }
 
-        // 3. 바닥 바로 윗줄(Down) 판정 로직
-        // 내 아래의 아래(row + 2)가 벽이 아니라면, 내 아랫칸이 최하단(Bottom)이므로 나는 'Down' 레이어가 됩니다.
-        bool isDownLayer = !IsWallTokenAt(tokenRows, row + 2, x);
-        if (isDownLayer)
+        // 3. 외곽 모서리(Outer Corner) 및 가장자리 연결 판정 (우선순위 상향)
+        // 상단 마감 라인 모서리
+        if (!wallUp && !wallLeft && wallDown && wallRight) return "stone_wall_left_up";
+        if (!wallUp && !wallRight && wallDown && wallLeft) return "stone_wall_right_up";
+        // 하단 마감 라인 모서리
+        if (!wallDown && !wallLeft && wallUp && wallRight) return "stone_wall_left_down";
+        if (!wallDown && !wallRight && wallUp && wallLeft) return "stone_wall_right_down";
+
+        // 4. 현재 위치에서의 수직 높이 및 상대적 위치 계산
+        int topRow = row;
+        while (IsWallTokenAt(tokenRows, topRow - 1, x)) topRow--;
+
+        int bottomRow = row;
+        while (IsWallTokenAt(tokenRows, bottomRow + 1, x)) bottomRow++;
+
+        int totalHeight = bottomRow - topRow + 1;
+        int distanceFromBottom = bottomRow - row;
+
+        // 단일 행 수평 벽이거나 좌우 복도 형태일 때 마감 처리
+        bool isHorizontalPassage = wallLeft && wallRight && !wallUp;
+        if (totalHeight == 1 || isHorizontalPassage)
         {
             if (!wallLeft) return "stone_wall_left_down";
             if (!wallRight) return "stone_wall_right_down";
             return "stone_wall_down";
         }
 
-        // 4. 천장/천장 모서리(Up) 판정 로직
-        // 내 위(row - 1)가 벽이 아니라면 내가 최상단 벽면입니다.
-        if (!wallUp)
+        // 5. 높이 기반 레이어 매핑 규칙 (가장자리가 아닐 때 두께감 표현)
+        if (distanceFromBottom == 0) // 1층 (Bottom)
         {
-            if (!wallLeft) return "stone_wall_left_up";
-            if (!wallRight) return "stone_wall_right_up";
-            return "stone_wall_up";
+            if (!wallLeft) return "stone_wall_left_bottom";
+            if (!wallRight) return "stone_wall_right_bottom";
+            return "stone_wall_middle_bottom";
+        }
+        if (distanceFromBottom == 1) // 2층 (Side)
+        {
+            if (!wallLeft) return "stone_wall_left_side";
+            if (!wallRight) return "stone_wall_right_side";
+            return "stone_wall_middle_side";
+        }
+        if (distanceFromBottom == 2) // 3층 (Down)
+        {
+            if (!wallLeft) return "stone_wall_left_down";
+            if (!wallRight) return "stone_wall_right_down";
+            return "stone_wall_down";
         }
 
-        // 5. 좌/우 외곽 벽면 판정 로직
-        // 상하로는 벽이 이어지는데 좌측이나 우측이 뚫려있을 때
+        // 상하 마감
+        if (!wallUp) return "stone_wall_up";
         if (!wallLeft) return "stone_wall_left";
         if (!wallRight) return "stone_wall_right";
 
-        // 6. 기본값: 사방이 모두 벽으로 채워진 내부 영역
         return "stone_wall";
     }
-    
+
+    // [수정 완료] pathTilemap 대신 기존에 존재하는 dirtTilemap을 사용합니다.
+    private void CheckAndApplyUnderWallPath(string[][] tokenRows, int row, int x, Vector3Int targetCell)
+    {
+        // 내 아랫줄(row + 1)이 길 토큰('P', 'd', 'd2')인지 정밀 검사
+        bool isPathBelow = IsTokenAt(tokenRows, row + 1, x, "P") ||
+                           IsTokenAt(tokenRows, row + 1, x, "d") ||
+                           IsTokenAt(tokenRows, row + 1, x, "d2");
+
+        if (isPathBelow)
+        {
+            // 흙길 레이어 타일맵(dirtTilemap)이 인스펙터에 정상 할당되었는지 검사
+            Tilemap layerTilemap = GetLayerTilemap(dirtTilemap);
+            if (layerTilemap != null)
+            {
+                // 스프라이트 룩업 데이터 확보
+                if (_spriteLookup.TryGetValue("d_0", out Sprite pathSprite) && pathSprite != null)
+                {
+                    TileBase pathTile = GetOrCreateTile("d_0", pathSprite);
+                    if (pathTile != null)
+                    {
+                        // 기존 벽 타일맵 위치 바로 아래의 동일 셀(Z축 기준 뒤쪽 레이어 구조)에 길 타일을 먼저 선배치합니다.
+                        layerTilemap.SetTile(targetCell, pathTile);
+                    }
+                }
+            }
+        }
+    }
+
+    private static bool IsTokenAt(string[][] tokenRows, int row, int x, string targetToken)
+    {
+        if (tokenRows == null || row < 0 || row >= tokenRows.Length) return false;
+        string[] tokens = tokenRows[row];
+        if (tokens == null || x < 0 || x >= tokens.Length) return false;
+        return tokens[x] == targetToken;
+    }
+
     private static bool IsWallTokenAt(string[][] tokenRows, int row, int x)
     {
         if (tokenRows == null || row < 0 || row >= tokenRows.Length)
@@ -648,11 +724,22 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         RegisterTileAsset("stone_wall_left",            "Assets/modak_image_test/wall_left.asset");
         RegisterTileAsset("stone_wall_left_up",         "Assets/modak_image_test/wall_left_up.asset");
         RegisterTileAsset("stone_wall_left_down",       "Assets/modak_image_test/wall_left_down.asset");
-        RegisterTileAsset("stone_wall_left_bottom",     "Assets/modak_image_test/wall_left_bottom.asset");
         RegisterTileAsset("stone_wall_right",           "Assets/modak_image_test/wall_right.asset");
         RegisterTileAsset("stone_wall_right_up",        "Assets/modak_image_test/wall_right_up.asset");
         RegisterTileAsset("stone_wall_right_down",      "Assets/modak_image_test/wall_right_down.asset");
+        
+        RegisterTileAsset("stone_wall_right_side",      "Assets/modak_image_test/wall_right_side.asset");
+        RegisterTileAsset("stone_wall_middle_side",     "Assets/modak_image_test/wall_middle_side.asset");
+        RegisterTileAsset("stone_wall_left_side",       "Assets/modak_image_test/wall_left_side.asset");
+
         RegisterTileAsset("stone_wall_right_bottom",    "Assets/modak_image_test/wall_right_bottom.asset");
+        RegisterTileAsset("stone_wall_middle_bottom",   "Assets/modak_image_test/wall_middle_bottom.asset");
+        RegisterTileAsset("stone_wall_left_bottom",     "Assets/modak_image_test/wall_left_bottom.asset");
+
+        RegisterTileAsset("stone_wall_right_up_in",     "Assets/modak_image_test/wall_right_up_in.asset");
+        RegisterTileAsset("stone_wall_right_down_in",   "Assets/modak_image_test/wall_right_down_in.asset");
+        RegisterTileAsset("stone_wall_left_up_in",      "Assets/modak_image_test/wall_left_up_in.asset");
+        RegisterTileAsset("stone_wall_left_down_in",    "Assets/modak_image_test/wall_left_down_in.asset");
 
 
         RegisterSprite("water", "water.png");

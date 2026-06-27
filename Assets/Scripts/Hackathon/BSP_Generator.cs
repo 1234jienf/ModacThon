@@ -83,7 +83,7 @@ public class BSP_Generator : MonoBehaviour
     {
         leafNodes.Clear();
         actualRooms.Clear();
-        MapManager.Instance.ClearMapData(); // 매니저 데이터 초기화
+        MapManager.Instance.ClearMapData();
 
         Bounds boundsA = GetActualTilemapBounds(map_A, out mapACenter);
         Bounds boundsB = GetActualTilemapBounds(map_B, out mapBCenter);
@@ -98,8 +98,6 @@ public class BSP_Generator : MonoBehaviour
         GenerateRoom(root, 0);
 
         SaveMapToJson();
-
-        // 최종 매니저 상태 출력 (진입로 정보 포함)
         MapManager.Instance.LogMapStatus();
     }
 
@@ -161,7 +159,25 @@ public class BSP_Generator : MonoBehaviour
 
     void Divide(BridgeMapNode tree, int n)
     {
-        if (n == divideCount || tree.nodeRect.width < minNodeSizeToDivide || tree.nodeRect.height < minNodeSizeToDivide) return;
+        // 1. minNodeSizeToDivide - 2 규격 조건 반영
+        int limitSize = Mathf.Max(4, minNodeSizeToDivide - 2);
+        if (n == divideCount || tree.nodeRect.width < limitSize || tree.nodeRect.height < limitSize) return;
+
+        // 2. Map_A(시작점)와 Map_B(끝점) 사이의 상대적 위치 비율 계산 (0.0 ~ 1.0)
+        float nodeCenterX = tree.nodeRect.x + tree.nodeRect.width / 2f;
+        float progress = Mathf.InverseLerp(finalBridgeZone.x, finalBridgeZone.xMax, nodeCenterX);
+
+        if (progress < 0.5f) // 중간 미만 (Map_A에 가까운 구역)
+        {
+            // Map_A에 가까울수록(progress가 0에 가까울수록) 분할 확률이 낮아짐
+            // 예: progress가 0이면 0%, 중간(0.5)에 가까워질수록 설정한 최대 확률(45%)에 수렴
+            float maxProbabilityAtCenter = 0.45f;
+            float currentDivideProbability = Mathf.Lerp(0f, maxProbabilityAtCenter, progress / 0.5f);
+
+            if (Random.value > currentDivideProbability) return; // 확률을 뚫지 못하면 넓은 방으로 유지
+        }
+        // 중간 이상(progress >= 0.5f) 영역은 무조건(100%) 분할 진행
+
         int maxLength = Mathf.Max(tree.nodeRect.width, tree.nodeRect.height);
         int split = Mathf.RoundToInt(Random.Range(maxLength * minimumDevideRate, maxLength * maximumDivideRate));
         if (maxLength <= 4 || split <= 1 || (maxLength - split) <= 1) return;
@@ -188,23 +204,29 @@ public class BSP_Generator : MonoBehaviour
         if (n == divideCount || (tree.leftNode == null && tree.rightNode == null))
         {
             rect = tree.nodeRect;
-            if (rect.width <= 2 || rect.height <= 2) { leafNodes.Add(tree); return rect; }
+
+            // 벽 두께 2칸 이상을 보장하기 위해 노드 패딩 마진 최소 크기 체크 확장
+            if (rect.width <= 5 || rect.height <= 5) { leafNodes.Add(tree); return rect; }
 
             int minW = Mathf.Max(2, Mathf.RoundToInt(rect.width * minRoomSizeRatio));
             int maxW = Mathf.Max(minW + 1, Mathf.RoundToInt(rect.width * maxRoomSizeRatio));
             int minH = Mathf.Max(2, Mathf.RoundToInt(rect.height * minRoomSizeRatio));
             int maxH = Mathf.Max(minH + 1, Mathf.RoundToInt(rect.height * maxRoomSizeRatio));
 
-            int width = Random.Range(minW, Mathf.Min(maxW, rect.width));
-            int height = Random.Range(minH, Mathf.Min(maxH, rect.height));
-            int x = rect.x + Random.Range(1, rect.width - width);
-            int y = rect.y + Random.Range(1, rect.height - height);
+            int width = Random.Range(minW, Mathf.Min(maxW, rect.width - 4)); // 최소 양쪽 2칸 확보용 서브트랙트
+            int height = Random.Range(minH, Mathf.Min(maxH, rect.height - 4));
+
+            if (width <= 0) width = 1;
+            if (height <= 0) height = 1;
+
+            // 시작 좌표 마진을 Random 1에서 최소 '2' 이상의 벽 두께를 갖도록 수정
+            int x = rect.x + Random.Range(2, Mathf.Max(3, rect.width - width - 1));
+            int y = rect.y + Random.Range(2, Mathf.Max(3, rect.height - height - 1));
 
             rect = new RectInt(x, y, width, height);
             tree.roomRect = rect;
             leafNodes.Add(tree); actualRooms.Add(tree);
 
-            // 매니저에 방 등록
             MapManager.Instance.RegisterRoom(rect);
 
             if (drawRoomLines) DrawRectangle(rect);
@@ -222,10 +244,9 @@ public class BSP_Generator : MonoBehaviour
     {
         if (actualRooms.Count == 0) return;
 
-        // --- map_A 연결 및 매니저 등록 ---
         int targetY_A = Mathf.Clamp(mapACenter.y, finalBridgeZone.y, finalBridgeZone.yMax - 1);
         Vector2Int entryPointA = new Vector2Int(finalBridgeZone.x, targetY_A);
-        MapManager.Instance.EntryPointA = entryPointA; // [수정] 매니저에 진입로 등록
+        MapManager.Instance.EntryPointA = entryPointA;
 
         BridgeMapNode closestRoomA = null;
         float minDistA = float.MaxValue;
@@ -236,10 +257,9 @@ public class BSP_Generator : MonoBehaviour
         }
         if (closestRoomA != null) DigCorridor(entryPointA, closestRoomA.center, grid, w, h);
 
-        // --- map_B 연결 및 매니저 등록 ---
         int targetY_B = Mathf.Clamp(mapBCenter.y, finalBridgeZone.y, finalBridgeZone.yMax - 1);
         Vector2Int entryPointB = new Vector2Int(finalBridgeZone.xMax - 1, targetY_B);
-        MapManager.Instance.EntryPointB = entryPointB; // [수정] 매니저에 진입로 등록
+        MapManager.Instance.EntryPointB = entryPointB;
 
         BridgeMapNode closestRoomB = null;
         float minDistB = float.MaxValue;
@@ -327,11 +347,12 @@ public class BSP_Generator : MonoBehaviour
             DrawLine(new Vector2(end.x, start.y), new Vector2(end.x, end.y), Color.yellow, 0.18f);
         }
 
+        // 2칸 두께 여백 안전성 검증 범위 확장
         bool IsPathBlocked(int x, int y, int dx, int dy)
         {
-            for (int i = -1; i <= 1; i++)
+            for (int i = -2; i <= 2; i++)
             {
-                for (int j = -1; j <= 1; j++)
+                for (int j = -2; j <= 2; j++)
                 {
                     int ny = y + i;
                     int nx = x + j;
@@ -346,7 +367,7 @@ public class BSP_Generator : MonoBehaviour
         int maxX = Mathf.Max(gridStartX, gridEndX);
         int currentY = gridStartY;
 
-        if (IsPathBlocked(gridStartX, currentY, 1, 0)) currentY += (currentY < h - 2) ? 1 : -1;
+        if (IsPathBlocked(gridStartX, currentY, 1, 0)) currentY += (currentY < h - 3) ? 2 : -2;
 
         for (int x = minX; x <= maxX; x++)
         {
@@ -364,7 +385,7 @@ public class BSP_Generator : MonoBehaviour
         int maxY = Mathf.Max(gridStartY, gridEndY);
         int currentX = gridEndX;
 
-        if (IsPathBlocked(currentX, gridEndY, 0, 1)) currentX += (currentX < w - 2) ? 1 : -1;
+        if (IsPathBlocked(currentX, gridEndY, 0, 1)) currentX += (currentX < w - 3) ? 2 : -2;
 
         for (int y = minY; y <= maxY; y++)
         {
@@ -379,7 +400,6 @@ public class BSP_Generator : MonoBehaviour
         }
     }
 
-    // [완전 수정] 방 주변에 붙은 복도 타일들을 2차원 덩어리(Cluster)로 묶어, 덩어리당 단 '1개의 중심점'만 입구로 등록합니다.
     private void FindAndRegisterEntrances(char[,] grid, int w, int h)
     {
         foreach (var room in MapManager.Instance.GetAllRooms())
@@ -388,23 +408,19 @@ public class BSP_Generator : MonoBehaviour
             int startX = b.x - finalBridgeZone.x;
             int startY = b.y - finalBridgeZone.y;
 
-            // 1. 방 테두리 바깥 1칸에 존재하는 모든 'P' 타일 수집
             HashSet<Vector2Int> perimeterCorridors = new HashSet<Vector2Int>();
 
-            // 위아래 가로 테두리
             for (int x = startX; x < startX + b.width; x++)
             {
                 if (IsCorridorTile(x, startY - 1, grid, w, h)) perimeterCorridors.Add(new Vector2Int(x, startY - 1));
                 if (IsCorridorTile(x, startY + b.height, grid, w, h)) perimeterCorridors.Add(new Vector2Int(x, startY + b.height));
             }
-            // 좌우 세로 테두리
             for (int y = startY; y < startY + b.height; y++)
             {
                 if (IsCorridorTile(startX - 1, y, grid, w, h)) perimeterCorridors.Add(new Vector2Int(startX - 1, y));
                 if (IsCorridorTile(startX + b.width, y, grid, w, h)) perimeterCorridors.Add(new Vector2Int(startX + b.width, y));
             }
 
-            // 2. 수집된 테두리 복도 타일들을 인접 관계(2차원)에 따라 덩어리(Cluster)로 분리 (BFS 활용)
             HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
             List<List<Vector2Int>> clusters = new List<List<Vector2Int>>();
 
@@ -412,7 +428,6 @@ public class BSP_Generator : MonoBehaviour
             {
                 if (visited.Contains(pos)) continue;
 
-                // 새로운 복도 덩어리 발견 -> BFS 탐색 시작
                 List<Vector2Int> cluster = new List<Vector2Int>();
                 Queue<Vector2Int> queue = new Queue<Vector2Int>();
 
@@ -424,7 +439,6 @@ public class BSP_Generator : MonoBehaviour
                     Vector2Int curr = queue.Dequeue();
                     cluster.Add(curr);
 
-                    // 상하좌우 및 대각선(8방향)으로 인접한 테두리 복도 타일이 있다면 같은 문 덩어리로 묶음
                     for (int dx = -1; dx <= 1; dx++)
                     {
                         for (int dy = -1; dy <= 1; dy++)
@@ -443,36 +457,23 @@ public class BSP_Generator : MonoBehaviour
                 clusters.Add(cluster);
             }
 
-            // 3. 각 덩어리(Cluster)별로 평균 중심점과 가장 가까운 타일 딱 '1개'만 추출하여 문으로 등록
             foreach (var cluster in clusters)
             {
                 if (cluster.Count == 0) continue;
 
-                // 덩어리의 무게중심(평균 좌표) 계산
-                float avgX = 0;
-                float avgY = 0;
-                foreach (var pt in cluster)
-                {
-                    avgX += pt.x;
-                    avgY += pt.y;
-                }
+                float avgX = 0; float avgY = 0;
+                foreach (var pt in cluster) { avgX += pt.x; avgY += pt.y; }
                 Vector2 centerOfCluster = new Vector2(avgX / cluster.Count, avgY / cluster.Count);
 
-                // 중심점과 물리적 거리가 가장 가까운 실제 타일 선택
                 Vector2Int bestTile = cluster[0];
                 float minDistance = float.MaxValue;
 
                 foreach (var pt in cluster)
                 {
                     float dist = Vector2.Distance(centerOfCluster, new Vector2(pt.x, pt.y));
-                    if (dist < minDistance)
-                    {
-                        minDistance = dist;
-                        bestTile = pt;
-                    }
+                    if (dist < minDistance) { minDistance = dist; bestTile = pt; }
                 }
 
-                // 월드 좌표로 복원하여 최종 등록 (중복 제거)
                 Vector2Int worldPos = new Vector2Int(bestTile.x + finalBridgeZone.x, bestTile.y + finalBridgeZone.y);
                 if (!room.entrancePositions.Contains(worldPos))
                 {
@@ -510,8 +511,7 @@ public class BSP_Generator : MonoBehaviour
         }
 
         ConnectAdjacentRooms(grid, w, h);
-        ConnectMapsToBridge(grid, w, h); // 내부에서 MapManager에 진입로 기록
-
+        ConnectMapsToBridge(grid, w, h);
         FindAndRegisterEntrances(grid, w, h);
 
         MapJsonData jsonData = new MapJsonData();
@@ -528,7 +528,7 @@ public class BSP_Generator : MonoBehaviour
         if (File.Exists(filePath)) File.Delete(filePath);
         File.WriteAllText(filePath, jsonString);
 
-        Debug.Log($"[JSON 폭3칸/중앙단일진입 저장완료] 경로: {filePath}");
+        Debug.Log($"[JSON 저장완료] 경로: {filePath}");
     }
 
     private void DrawMapOutline(RectInt rect) { GameObject go = new GameObject("Bridge_Total_Outline"); go.transform.SetParent(this.transform); LineRenderer lr = go.AddComponent<LineRenderer>(); SetupLineRenderer(lr, Color.white, 0.15f); lr.positionCount = 4; lr.loop = true; lr.SetPosition(0, new Vector2(rect.x, rect.y)); lr.SetPosition(1, new Vector2(rect.x + rect.width, rect.y)); lr.SetPosition(2, new Vector2(rect.x + rect.width, rect.y + rect.height)); lr.SetPosition(3, new Vector2(rect.x, rect.y + rect.height)); }
@@ -539,10 +539,8 @@ public class BSP_Generator : MonoBehaviour
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        // Application이 실행 중이고 MapManager에 데이터가 있을 때만 작동
         if (!Application.isPlaying || MapManager.Instance == null) return;
 
-        // GUI 스타일 설정 (글씨 크기 및 색상)
         GUIStyle roomStyle = new GUIStyle();
         roomStyle.normal.textColor = Color.green;
         roomStyle.fontSize = 14;
@@ -552,32 +550,22 @@ public class BSP_Generator : MonoBehaviour
         entranceStyle.normal.textColor = Color.yellow;
         entranceStyle.fontSize = 11;
 
-        // 1. 각 방의 인덱스(ID) 표시
         foreach (var room in MapManager.Instance.GetAllRooms())
         {
-            Vector3 roomCenter = new Vector3(
-                room.bounds.x + room.bounds.width / 2f, 
-                room.bounds.y + room.bounds.height / 2f, 
-                0
-            );
-            
-            // 씬 뷰 월드 좌표에 텍스트 출력
+            Vector3 roomCenter = new Vector3(room.bounds.x + room.bounds.width / 2f, room.bounds.y + room.bounds.height / 2f, 0);
             UnityEditor.Handles.Label(roomCenter, $"[Room {room.id}]", roomStyle);
 
-            // 2. 각 방에 속한 입구(Entrance)의 좌표 및 순번 표시
             for (int i = 0; i < room.entrancePositions.Count; i++)
             {
                 Vector2Int entPos = room.entrancePositions[i];
                 Vector3 entWorldPos = new Vector3(entPos.x, entPos.y, 0);
 
-                // 입구 위치에 작은 노란색 구체 배치 및 텍스트 표시
                 Gizmos.color = Color.yellow;
                 Gizmos.DrawSphere(entWorldPos, 0.2f);
                 UnityEditor.Handles.Label(entWorldPos + Vector3.up * 0.3f, $"Ent_{i}\n({entPos.x}, {entPos.y})", entranceStyle);
             }
         }
 
-        // 3. 외부 진입로(Map_A, Map_B) 표시
         GUIStyle entryStyle = new GUIStyle();
         entryStyle.normal.textColor = Color.cyan;
         entryStyle.fontSize = 12;
