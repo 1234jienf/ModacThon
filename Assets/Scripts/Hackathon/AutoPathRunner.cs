@@ -75,6 +75,14 @@ public class AutoPathRunner : MonoBehaviour
     public float pathTileCost = 1f;
     public float grassTileCost = 8f;
 
+    [Header("Enemy Avoidance")]
+    public bool avoidGeneratedEnemies = true;
+    public Transform enemyRoot;
+    public string generatedEnemiesRootName = "Generated Enemies";
+    public int enemyBlockedRadius = 0;
+    public int enemyAvoidanceRadius = 1;
+    public float enemyAvoidanceCost = 25f;
+
     [Header("Output")]
     public bool exportReport = true;
     public string outputRoot = "HackathonAI/path_run_reports";
@@ -342,7 +350,11 @@ public class AutoPathRunner : MonoBehaviour
             $"AutoPathRunner [{mapId}]: bridge start=({start.x},{start.y}) goal=({goal.x},{goal.y}) " +
             $"world=({bridgeData.startX},{bridgeData.startY}) size={bridgeData.width}x{bridgeData.height}");
 
-        List<Vector2Int> path = FindPathAStar(pathMatrix, start, goal, true, false, pathTileCost, grassTileCost);
+        HashSet<Vector2Int> blockedCells;
+        Dictionary<Vector2Int, float> extraCosts;
+        BuildBridgeEnemyAvoidance(bridgeData, pathMatrix, start, goal, out blockedCells, out extraCosts);
+
+        List<Vector2Int> path = FindPathAStar(pathMatrix, start, goal, true, false, pathTileCost, grassTileCost, blockedCells, extraCosts);
         if (path == null || path.Count == 0)
         {
             latestReport = BuildFailureReport("Bridge map A→B path(P)가 끊겨 있습니다. PathProcessor 결과를 확인하세요.");
@@ -415,6 +427,137 @@ public class AutoPathRunner : MonoBehaviour
         otherSteps++;
     }
 
+    private void BuildBridgeEnemyAvoidance(
+        InputMapData bridgeData,
+        char[,] matrix,
+        Vector2Int start,
+        Vector2Int goal,
+        out HashSet<Vector2Int> blockedCells,
+        out Dictionary<Vector2Int, float> extraCosts)
+    {
+        blockedCells = new HashSet<Vector2Int>();
+        extraCosts = new Dictionary<Vector2Int, float>();
+
+        foreach (Transform enemy in GetEnemyTransforms())
+        {
+            Vector3 position = enemy.position;
+            int x = Mathf.FloorToInt(position.x - bridgeData.startX);
+            int y = Mathf.FloorToInt(position.y - bridgeData.startY);
+            AddEnemyAvoidanceCell(new Vector2Int(x, y), matrix, start, goal, blockedCells, extraCosts);
+        }
+    }
+
+    private void BuildMapProviderEnemyAvoidance(
+        char[,] matrix,
+        Vector2Int start,
+        Vector2Int goal,
+        out HashSet<Vector2Int> blockedCells,
+        out Dictionary<Vector2Int, float> extraCosts)
+    {
+        blockedCells = new HashSet<Vector2Int>();
+        extraCosts = new Dictionary<Vector2Int, float>();
+
+        if (mapProvider == null)
+        {
+            return;
+        }
+
+        foreach (Transform enemy in GetEnemyTransforms())
+        {
+            if (mapProvider.TryWorldToMatrixIndex(enemy.position, out Vector2Int cell))
+            {
+                AddEnemyAvoidanceCell(cell, matrix, start, goal, blockedCells, extraCosts);
+            }
+        }
+    }
+
+    private IEnumerable<Transform> GetEnemyTransforms()
+    {
+        if (!avoidGeneratedEnemies)
+        {
+            yield break;
+        }
+
+        Transform root = enemyRoot != null ? enemyRoot : FindGeneratedEnemiesRoot();
+        if (root == null)
+        {
+            yield break;
+        }
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            if (child != null && child.gameObject.activeInHierarchy)
+            {
+                yield return child;
+            }
+        }
+    }
+
+    private Transform FindGeneratedEnemiesRoot()
+    {
+        if (string.IsNullOrWhiteSpace(generatedEnemiesRootName))
+        {
+            return null;
+        }
+
+        GameObject rootObject = GameObject.Find(generatedEnemiesRootName);
+        return rootObject != null ? rootObject.transform : null;
+    }
+
+    private void AddEnemyAvoidanceCell(
+        Vector2Int enemyCell,
+        char[,] matrix,
+        Vector2Int start,
+        Vector2Int goal,
+        HashSet<Vector2Int> blockedCells,
+        Dictionary<Vector2Int, float> extraCosts)
+    {
+        if (!IsInside(matrix, enemyCell))
+        {
+            return;
+        }
+
+        int blockedRadius = Mathf.Max(0, enemyBlockedRadius);
+        int avoidanceRadius = Mathf.Max(blockedRadius, enemyAvoidanceRadius);
+
+        for (int y = -avoidanceRadius; y <= avoidanceRadius; y++)
+        {
+            for (int x = -avoidanceRadius; x <= avoidanceRadius; x++)
+            {
+                Vector2Int cell = new Vector2Int(enemyCell.x + x, enemyCell.y + y);
+                if (!IsInside(matrix, cell) || cell == start || cell == goal)
+                {
+                    continue;
+                }
+
+                int distance = Mathf.Abs(x) + Mathf.Abs(y);
+                if (distance > avoidanceRadius)
+                {
+                    continue;
+                }
+
+                if (distance <= blockedRadius)
+                {
+                    blockedCells.Add(cell);
+                    continue;
+                }
+
+                if (enemyAvoidanceCost <= 0f)
+                {
+                    continue;
+                }
+
+                float falloff = 1f - distance / (avoidanceRadius + 1f);
+                float cost = enemyAvoidanceCost * Mathf.Max(0.1f, falloff);
+                if (!extraCosts.TryGetValue(cell, out float existing) || cost > existing)
+                {
+                    extraCosts[cell] = cost;
+                }
+            }
+        }
+    }
+
     private IEnumerator ExecuteRunCoroutine()
     {
         char[,] structureMatrix = mapProvider.GetMapMatrix();
@@ -444,10 +587,14 @@ public class AutoPathRunner : MonoBehaviour
 
         Debug.Log($"AutoPathRunner [{mapId}]: start=({start.x},{start.y}), goal=({goal.x},{goal.y}) {resolveMessage}");
 
-        List<Vector2Int> path = FindPathAStar(pathMatrix, start, goal, pathTilesOnly, false, pathTileCost, grassTileCost);
+        HashSet<Vector2Int> blockedCells;
+        Dictionary<Vector2Int, float> extraCosts;
+        BuildMapProviderEnemyAvoidance(pathMatrix, start, goal, out blockedCells, out extraCosts);
+
+        List<Vector2Int> path = FindPathAStar(pathMatrix, start, goal, pathTilesOnly, false, pathTileCost, grassTileCost, blockedCells, extraCosts);
         if ((path == null || path.Count == 0) && pathTilesOnly && allowGrassDetour)
         {
-            path = FindPathAStar(pathMatrix, start, goal, false, true, pathTileCost, grassTileCost);
+            path = FindPathAStar(pathMatrix, start, goal, false, true, pathTileCost, grassTileCost, blockedCells, extraCosts);
             if (path != null && path.Count > 0)
             {
                 Debug.LogWarning($"AutoPathRunner [{mapId}]: path(p)가 끊겨 grass 우회 경로를 사용합니다.");
@@ -789,7 +936,9 @@ public class AutoPathRunner : MonoBehaviour
         bool pathOnly,
         bool allowGrass,
         float pathCost,
-        float grassCost)
+        float grassCost,
+        HashSet<Vector2Int> blockedCells = null,
+        Dictionary<Vector2Int, float> extraCosts = null)
     {
         int height = matrix.GetLength(0);
         int width = matrix.GetLength(1);
@@ -832,8 +981,18 @@ public class AutoPathRunner : MonoBehaviour
                     continue;
                 }
 
+                if (blockedCells != null && blockedCells.Contains(next))
+                {
+                    continue;
+                }
+
                 char cell = MapProfile.NormalizeCell(matrix[next.y, next.x]);
                 float stepCost = GetTileMoveCost(cell, pathCost, grassCost);
+                if (extraCosts != null && extraCosts.TryGetValue(next, out float extraCost))
+                {
+                    stepCost += extraCost;
+                }
+
                 float tentativeG = current.g + stepCost;
 
                 if (gScore.TryGetValue(next, out float knownG) && tentativeG >= knownG)
