@@ -330,6 +330,18 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         return "stone_wall";
     }
     
+    private static bool IsWallTokenAt(string[][] tokenRows, int row, int x)
+    {
+        if (tokenRows == null || row < 0 || row >= tokenRows.Length)
+            return false;
+
+        string[] tokens = tokenRows[row];
+        if (tokens == null || x < 0 || x >= tokens.Length)
+            return false;
+
+        return tokens[x] == "#";
+    }
+    
     private static string GetBlendDirectionFileStem(string spriteKey)
     {
         if (string.IsNullOrEmpty(spriteKey) || spriteKey.Length < 3)
@@ -496,7 +508,9 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
     private Tilemap GetTilemapForSpriteKey(string spriteKey)
     {
-        if (spriteKey == "stone_wall")
+        // if (spriteKey == "stone_wall")
+        //     return renderWallTiles ? GetLayerTilemap(wallTilemap) : null;
+        if (spriteKey.StartsWith("stone_wall", StringComparison.Ordinal))
             return renderWallTiles ? GetLayerTilemap(wallTilemap) : null;
         if (spriteKey == "water")
             return renderLakeTiles ? GetLayerTilemap(lakeTilemap) : null;
