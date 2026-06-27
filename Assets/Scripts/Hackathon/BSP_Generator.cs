@@ -264,6 +264,7 @@ public class BSP_Generator : MonoBehaviour
         int w = finalBridgeZone.width;
         int h = finalBridgeZone.height;
 
+        // 1. 기본 배경을 전부 벽/사잇공간인 "#"으로 채운 2차원 배열 초기화
         char[,] grid = new char[h, w];
         for (int y = 0; y < h; y++)
         {
@@ -273,6 +274,7 @@ public class BSP_Generator : MonoBehaviour
             }
         }
 
+        // 2. 리프 노드들을 돌며 실제 방(구현 공간)이 있는 영역을 "."으로 파내기
         foreach (var node in leafNodes)
         {
             if (node.roomRect.width > 0 && node.roomRect.height > 0)
@@ -284,7 +286,7 @@ public class BSP_Generator : MonoBehaviour
                 {
                     for (int x = startX; x < startX + node.roomRect.width; x++)
                     {
-                        // 사방 1칸 외곽 테두리선 보장
+                        // 외곽 테두리선 보장
                         if (x > 0 && x < w - 1 && y > 0 && y < h - 1)
                         {
                             grid[y, x] = '.';
@@ -294,6 +296,7 @@ public class BSP_Generator : MonoBehaviour
             }
         }
 
+        // 3. JSON 데이터 가공
         MapJsonData jsonData = new MapJsonData();
         jsonData.width = w;
         jsonData.height = h;
@@ -312,6 +315,7 @@ public class BSP_Generator : MonoBehaviour
 
         string jsonString = JsonUtility.ToJson(jsonData, true);
 
+        // 4. 저장 폴더 경로 설정 (tmpOutput)
         string projectRoot = Directory.GetParent(Application.dataPath).FullName;
         string folderPath = Path.Combine(projectRoot, "tmpOutput");
         
@@ -320,18 +324,45 @@ public class BSP_Generator : MonoBehaviour
             Directory.CreateDirectory(folderPath);
         }
 
-        string filePath = Path.Combine(folderPath, "BridgeMapData.json");
+        // 5. JSON 파일 저장 (덮어쓰기)
+        string jsonFilePath = Path.Combine(folderPath, "BridgeMapData.json");
+        if (File.Exists(jsonFilePath)) File.Delete(jsonFilePath);
+        File.WriteAllText(jsonFilePath, jsonString);
+
+        // ================= [새로 추가: PNG 이미지 저장 로직] =================
         
-        if (File.Exists(filePath))
+        // 맵 크기와 동일한 텍스처 생성 (픽셀 필터 모드는 칼같이 떨어지도록 Point로 설정)
+        Texture2D mapTexture = new Texture2D(w, h, TextureFormat.RGB24, false);
+        mapTexture.filterMode = FilterMode.Point;
+
+        // 2차원 배열을 돌며 색상 지정 (벽 = 검은색, 길 = 흰색)
+        for (int y = 0; y < h; y++)
         {
-            File.Delete(filePath);
+            for (int x = 0; x < w; x++)
+            {
+                Color pixelColor = (grid[y, x] == '#') ? Color.black : Color.white;
+                mapTexture.SetPixel(x, y, pixelColor);
+            }
         }
         
-        File.WriteAllText(filePath, jsonString);
+        // 변경된 픽셀 데이터를 텍스처에 최종 적용
+        mapTexture.Apply();
 
-        Debug.Log($"[JSON 덮어쓰기 완료] 16px 그리드 맞춤 적용 | 경로: {filePath}");
+        // 바이트 배열로 인코딩 후 파일 쓰기
+        byte[] pngBytes = mapTexture.EncodeToPNG();
+        string pngFilePath = Path.Combine(folderPath, "BridgeMapImage.png");
+        
+        if (File.Exists(pngFilePath)) File.Delete(pngFilePath);
+        File.WriteAllBytes(pngFilePath, pngBytes);
+
+        // 메모리 누수 방지를 위해 동적 생성한 텍스처 파괴
+        DestroyImmediate(mapTexture);
+
+        // =====================================================================
+
+        Debug.Log($"[저장 완료] JSON 및 PNG 이미지가 생성되었습니다.\n경로: {folderPath}");
     }
-
+    
     // --- (라인 렌더러 시각화에도 타일 유닛 스케일을 곱해 완벽 매칭) ---
     private void DrawMapOutline(RectInt rect) {
         float s = (unityGrid != null) ? unityGrid.cellSize.x : 1.0f;
