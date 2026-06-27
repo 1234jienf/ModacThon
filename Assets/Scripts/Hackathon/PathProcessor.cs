@@ -34,6 +34,25 @@ public class PathProcessor : MonoBehaviour
     [Range(1, 32)]
     [SerializeField] private int pointSize = 8;
 
+    [Header("=== Lake 배치 ===")]
+    [SerializeField] private bool placeLakesAfterPaths = true;
+    [SerializeField] private TilemapDataProvider mapAProvider;
+    [SerializeField] private TilemapDataProvider mapBProvider;
+    [Range(0, 4)]
+    [SerializeField] private int lakeMinDistanceFromPath = 1;
+    [Range(1, 3)]
+    [SerializeField] private int lakePatchRadiusMin = 1;
+    [Range(1, 4)]
+    [SerializeField] private int lakePatchRadiusMax = 2;
+    [SerializeField] private bool useFieldLakeRatios = true;
+    [Range(0f, 0.3f)]
+    [SerializeField] private float maxLakeCoverage = 0.12f;
+    [Range(0f, 1f)]
+    [SerializeField] private float groundLakeChanceLeft = 0.06f;
+    [Range(0f, 1f)]
+    [SerializeField] private float groundLakeChanceRight = 0.14f;
+    [SerializeField] private int lakeRandomSeed = 0;
+
     [ContextMenu("방별 중심점 기반 펄린 패스 생성 및 이미지 저장")]
     public void ProcessRoomPaths()
     {
@@ -99,6 +118,14 @@ public class PathProcessor : MonoBehaviour
             }
         }
 
+        if (placeLakesAfterPaths)
+        {
+            TryResolveMapProviders();
+            BridgeLakeRandomPlacer.Settings lakeSettings = BuildLakeSettings();
+            int lakeCells = BridgeLakeRandomPlacer.PlaceLakes(grid, mapAProvider, mapBProvider, lakeSettings);
+            Debug.Log($"[Lake 배치] {lakeCells} cells -> JSON에 'w' 토큰으로 저장됩니다.");
+        }
+
         // 3. 변환이 완료된 그리드를 최종 BridgeMapData_Path.json 파일로 저장
         BridgeMapJsonUtility.MarkBridgeEndpoints(grid);
 
@@ -122,6 +149,51 @@ public class PathProcessor : MonoBehaviour
         Debug.Log($"[가공 완료] 비교용 전/후 이미지 및 JSON 데이터 저장 완료! (경로: {folderPath})");
 
         TriggerBridgePathRunners();
+        TriggerAsciiMapRenderers();
+    }
+
+    private BridgeLakeRandomPlacer.Settings BuildLakeSettings()
+    {
+        BridgeLakeRandomPlacer.Settings settings = BridgeLakeRandomPlacer.CreateDefault();
+        settings.enabled = true;
+        settings.groundLakeChanceLeft = groundLakeChanceLeft;
+        settings.groundLakeChanceRight = groundLakeChanceRight;
+        settings.minDistanceFromPath = lakeMinDistanceFromPath;
+        settings.patchRadiusMin = lakePatchRadiusMin;
+        settings.patchRadiusMax = lakePatchRadiusMax;
+        settings.useFieldLakeRatios = useFieldLakeRatios;
+        settings.maxLakeCoverage = maxLakeCoverage;
+        settings.randomSeed = lakeRandomSeed;
+        return settings;
+    }
+
+    private void TryResolveMapProviders()
+    {
+        if (mapAProvider != null && mapBProvider != null)
+            return;
+
+        TilemapDataProvider[] providers = FindObjectsOfType<TilemapDataProvider>(true);
+        foreach (TilemapDataProvider provider in providers)
+        {
+            if (provider == null)
+                continue;
+
+            string name = provider.gameObject.name.ToLowerInvariant();
+            if (mapAProvider == null && (name.Contains("field 1") || name.Contains("field1") || name.Contains("map_a")))
+                mapAProvider = provider;
+            if (mapBProvider == null && (name.Contains("field 3") || name.Contains("field3") || name.Contains("map_b")))
+                mapBProvider = provider;
+        }
+    }
+
+    private void TriggerAsciiMapRenderers()
+    {
+        AsciiMapTilemapRenderer[] renderers = FindObjectsOfType<AsciiMapTilemapRenderer>(true);
+        foreach (AsciiMapTilemapRenderer renderer in renderers)
+        {
+            if (renderer != null)
+                renderer.RenderFromInspectorInput();
+        }
     }
 
     private void TriggerBridgePathRunners()

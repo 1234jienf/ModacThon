@@ -73,7 +73,10 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
     private readonly Dictionary<string, TileBase> _runtimeTiles = new Dictionary<string, TileBase>();
     private readonly Dictionary<string, Sprite> _spriteLookup = new Dictionary<string, Sprite>();
     private readonly HashSet<string> _missingSpriteWarnings = new HashSet<string>();
+    private bool? _blendedTilesAvailable;
     private const string SpawnRootName = "ASCII Map Spawned Objects";
+    private const string LakeWaterAnimationsFolder =
+        "Assets/Sprites/map/Tilesets/Wastelands/Animated Water/Animations";
 
     private void Start()
     {
@@ -111,6 +114,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
         LoadSpriteLookup();
         _missingSpriteWarnings.Clear();
+        _blendedTilesAvailable = null;
 
         if (clearBeforeRender)
             ClearOutputTilemaps();
@@ -183,11 +187,15 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
     private void FillGroundArea(Vector3Int origin, int width, int height)
     {
-        for (int y = 0; y < height; y++)
+        for (int row = 0; row < height; row++)
         {
+            int cellY = flipRowsVertically ? height - row - 1 : row;
+
             for (int x = 0; x < width; x++)
             {
-                SetSpriteTile(origin + new Vector3Int(x, y, 0), GetPositionAwareSpriteKey("g_0", x, y, width, height));
+                SetSpriteTile(
+                    origin + new Vector3Int(x, cellY, 0),
+                    GetPositionAwareSpriteKey("g_0", x, cellY, width, height));
             }
         }
     }
@@ -215,7 +223,8 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
             case "#":
                 return GetWallDirectionalKey(tokenRows, row, x);
             case "w":
-                return "water";
+                baseKey = GetLakeSpriteKey(tokenRows, row, x);
+                break;
             case ".":
                 baseKey = dotMeansGrass ? "g_0" : string.Empty;
                 break;
@@ -264,6 +273,15 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
             case "s_4":
             case "s_5":
             case "s_6":
+            case "w_0":
+            case "w_1":
+            case "w_2":
+            case "w_3":
+            case "w_4":
+            case "w_5":
+            case "w_6":
+            case "w_7":
+            case "w_8":
                 baseKey = token;
                 break;
             default:
@@ -276,7 +294,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
     private string GetPositionAwareSpriteKey(string baseKey, int x, int y, int width, int height)
     {
-        if (!useBlendedTiles || string.IsNullOrEmpty(baseKey))
+        if (!useBlendedTiles || string.IsNullOrEmpty(baseKey) || !HasBlendedTilesAvailable())
             return baseKey;
 
         string blendSet = GetBlendSetForSpriteKey(baseKey);
@@ -285,6 +303,17 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
             return baseKey;
 
         return $"{blendSet}_{directionFileStem}_{GetBlendRatioName(x, y, width, height)}";
+    }
+
+    private bool HasBlendedTilesAvailable()
+    {
+        if (!_blendedTilesAvailable.HasValue)
+        {
+            string groundDirectory = GetProjectRelativePath($"{blendedTilesFolder.TrimEnd('/', '\\')}/ground");
+            _blendedTilesAvailable = Directory.Exists(groundDirectory);
+        }
+
+        return _blendedTilesAvailable.Value;
     }
 
     private static string GetBlendSetForSpriteKey(string spriteKey)
@@ -532,6 +561,11 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         return "d_0";
     }
 
+    private static string GetLakeSpriteKey(string[][] tokenRows, int row, int x)
+    {
+        return $"w_{BridgeLakeRandomPlacer.ResolveLakeTileIndex(tokenRows, row, x)}";
+    }
+
     private static bool IsGrassTokenAt(string[][] tokenRows, int row, int x)
     {
         if (tokenRows == null || row < 0 || row >= tokenRows.Length)
@@ -588,7 +622,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         //     return renderWallTiles ? GetLayerTilemap(wallTilemap) : null;
         if (spriteKey.StartsWith("stone_wall", StringComparison.Ordinal))
             return renderWallTiles ? GetLayerTilemap(wallTilemap) : null;
-        if (spriteKey == "water")
+        if (spriteKey == "water" || spriteKey.StartsWith("w_", StringComparison.Ordinal))
             return renderLakeTiles ? GetLayerTilemap(lakeTilemap) : null;
         if (spriteKey.StartsWith("path_", StringComparison.Ordinal) ||
             spriteKey.StartsWith("d_", StringComparison.Ordinal) ||
@@ -744,6 +778,17 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
         RegisterSprite("water", "water.png");
 
+        // 0=L, 1=TL, 2=T, 3=TR, 4=R, 5=BR, 6=B, 7=BL, 8=C
+        RegisterTileAsset("w_0", $"{LakeWaterAnimationsFolder}/Ani_Water 11.asset");
+        RegisterTileAsset("w_1", $"{LakeWaterAnimationsFolder}/Ani_Water 8.asset");
+        RegisterTileAsset("w_2", $"{LakeWaterAnimationsFolder}/Ani_Water 9.asset");
+        RegisterTileAsset("w_3", $"{LakeWaterAnimationsFolder}/Ani_Water 10.asset");
+        RegisterTileAsset("w_4", $"{LakeWaterAnimationsFolder}/Ani_Water 13.asset");
+        RegisterTileAsset("w_5", $"{LakeWaterAnimationsFolder}/Ani_Water 16.asset");
+        RegisterTileAsset("w_6", $"{LakeWaterAnimationsFolder}/Ani_Water 15.asset");
+        RegisterTileAsset("w_7", $"{LakeWaterAnimationsFolder}/Ani_Water 14.asset");
+        RegisterTileAsset("w_8", $"{LakeWaterAnimationsFolder}/Ani_Water 12.asset");
+
         RegisterSprite("g_0", "all_grass.png");
         RegisterSprite("g_1", "up_grass.png");
         RegisterSprite("g_2", "down_grass.png");
@@ -787,15 +832,25 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
     private void SetSpriteTile(Vector3Int cell, string spriteKey)
     {
+        if (TrySetSpriteTile(cell, spriteKey))
+            return;
+
+        string fallbackKey = GetBaseKeyFromBlendedSpriteKey(spriteKey);
+        if (!string.IsNullOrEmpty(fallbackKey) && fallbackKey != spriteKey)
+            TrySetSpriteTile(cell, fallbackKey);
+    }
+
+    private bool TrySetSpriteTile(Vector3Int cell, string spriteKey)
+    {
         Tilemap outputTilemap = GetTilemapForSpriteKey(spriteKey);
         if (outputTilemap == null)
-            return;
+            return false;
 
         // 1. 이미 빌드된 타일 캐시에 있는지 확인
         if (_runtimeTiles.TryGetValue(spriteKey, out TileBase cachedTile) && cachedTile != null)
         {
             outputTilemap.SetTile(cell, cachedTile);
-            return;
+            return true;
         }
 
 #if UNITY_EDITOR
@@ -805,14 +860,12 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
             TileBase tileAsset = AssetDatabase.LoadAssetAtPath<TileBase>(assetPath);
             if (tileAsset != null)
             {
-                _runtimeTiles[spriteKey] = tileAsset; // 캐시에 저장
+                _runtimeTiles[spriteKey] = tileAsset;
                 outputTilemap.SetTile(cell, tileAsset);
-                return;
+                return true;
             }
-            else
-            {
-                Debug.LogError($"[.asset 로드 실패] 경로를 다시 확인하세요: {assetPath}");
-            }
+
+            Debug.LogError($"[.asset 로드 실패] 경로를 다시 확인하세요: {assetPath}");
         }
 #endif
 
@@ -821,18 +874,75 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         {
             sprite = LoadSpriteForKey(spriteKey);
             if (sprite != null)
-            {
                 _spriteLookup[spriteKey] = sprite;
-            }
-            else
-            {
-                if (_missingSpriteWarnings.Add(spriteKey))
-                    Debug.LogWarning($"Tile 에셋 또는 Sprite를 찾을 수 없음: {spriteKey}");
-                return;
-            }
+        }
+
+        if (sprite == null)
+        {
+            if (_missingSpriteWarnings.Add(spriteKey))
+                Debug.LogWarning($"Tile 에셋 또는 Sprite를 찾을 수 없음: {spriteKey}");
+            return false;
         }
 
         outputTilemap.SetTile(cell, GetOrCreateTile(spriteKey, sprite));
+        return true;
+    }
+
+    private static string GetBaseKeyFromBlendedSpriteKey(string spriteKey)
+    {
+        if (spriteKey.StartsWith("ground_", StringComparison.Ordinal))
+            return TryGetVariantBaseKey(spriteKey, "g_");
+
+        if (spriteKey.StartsWith("path_", StringComparison.Ordinal))
+            return TryGetVariantBaseKey(spriteKey, "d_");
+
+        return string.Empty;
+    }
+
+    private static string TryGetVariantBaseKey(string spriteKey, string prefix)
+    {
+        string directionStem = ExtractBlendDirectionStem(spriteKey);
+        if (string.IsNullOrEmpty(directionStem))
+            return string.Empty;
+
+        char? variant = GetVariantFromDirectionStem(directionStem);
+        return variant.HasValue ? $"{prefix}{variant.Value}" : string.Empty;
+    }
+
+    private static string ExtractBlendDirectionStem(string spriteKey)
+    {
+        int firstUnderscore = spriteKey.IndexOf('_');
+        if (firstUnderscore < 0 || firstUnderscore >= spriteKey.Length - 1)
+            return string.Empty;
+
+        int ratioMarker = spriteKey.LastIndexOf("_a_", StringComparison.Ordinal);
+        if (ratioMarker <= firstUnderscore)
+            return string.Empty;
+
+        return spriteKey.Substring(firstUnderscore + 1, ratioMarker - firstUnderscore - 1);
+    }
+
+    private static char? GetVariantFromDirectionStem(string directionStem)
+    {
+        switch (directionStem)
+        {
+            case "06_center":
+                return '0';
+            case "04_bottom":
+                return '1';
+            case "01_top":
+                return '2';
+            case "03_bottom_left":
+                return '3';
+            case "00_top_left":
+                return '4';
+            case "05_bottom_right":
+                return '5';
+            case "02_top_right":
+                return '6';
+            default:
+                return null;
+        }
     }
 
     private Sprite LoadSpriteForKey(string spriteKey)
@@ -1007,6 +1117,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
             "g_0", "g_1", "g_2", "g_3", "g_4", "g_5", "g_6",
             "d_0", "d_1", "d_2", "d_3", "d_4", "d_5", "d_6",
             "s_0", "s_1", "s_2", "s_3", "s_4", "s_5", "s_6",
+            "w_0", "w_1", "w_2", "w_3", "w_4", "w_5", "w_6", "w_7", "w_8",
             "d2"
         };
 
