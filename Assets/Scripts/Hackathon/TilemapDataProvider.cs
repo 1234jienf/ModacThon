@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
@@ -8,10 +9,12 @@ public class TilemapDataProvider : MonoBehaviour
     public List<TileBase> wallTiles = new List<TileBase>();
     public List<TileBase> planeTiles = new List<TileBase>();
 
-    [Header("타일셋 (0 TL, 1 T, 2 TR, 3 BL, 4 B, 5 BR, 6 C)")]
+    [Header("타일셋 Path/Ground (0 TL, 1 T, 2 TR, 3 BL, 4 B, 5 BR, 6 C)")]
     public TileBase[] pathTiles = new TileBase[7];
     public TileBase[] groundTiles = new TileBase[7];
-    public TileBase[] lakeTiles = new TileBase[7];
+
+    [Header("타일셋 Lake (0 L, 1 TL, 2 T, 3 TR, 4 R, 5 BR, 6 B, 7 BL, 8 C)")]
+    public TileBase[] lakeTiles = new TileBase[9];
 
     [Header("맵 특징 오브젝트 (Option)")]
     public GameObject startPoint;
@@ -26,6 +29,95 @@ public class TilemapDataProvider : MonoBehaviour
     void Awake()
     {
         InitializeTilemaps();
+    }
+
+    [ContextMenu("Auto Fill Blend Tiles From Tilemaps")]
+    public void AutoFillBlendTilesFromTilemaps()
+    {
+        InitializeTilemaps();
+        int pathCount = FillTileArrayFromTilemap(pathTiles, IsPathTilemap);
+        int groundCount = FillTileArrayFromTilemap(groundTiles, IsGroundTilemap);
+        int lakeCount = FillLakeTilesFromTilemap();
+
+        Debug.Log(
+            $"{gameObject.name}: blend tile auto-fill 완료\n" +
+            $"path={pathCount}/7, ground={groundCount}/7, lake={lakeCount}/9\n" +
+            "Lake는 Ani_Water 타일(Animations/) 9종: l, tl, t, tr, r, br, b, bl, c"
+        );
+    }
+
+    private int FillLakeTilesFromTilemap()
+    {
+        Tilemap source = FindTilemap(IsWaterTilemap);
+        if (source == null)
+        {
+            return 0;
+        }
+
+        return LakeTileMatcher.FillLakeTiles(lakeTiles, source);
+    }
+
+    private int FillTileArrayFromTilemap(TileBase[] target, System.Func<string, bool> matcher)
+    {
+        if (target == null)
+        {
+            return 0;
+        }
+
+        Tilemap source = FindTilemap(matcher);
+        if (source == null)
+        {
+            return 0;
+        }
+
+        List<TileBase> uniqueTiles = CollectUniqueTiles(source);
+        uniqueTiles.Sort((a, b) => string.Compare(a.name, b.name, StringComparison.Ordinal));
+
+        for (int i = 0; i < target.Length; i++)
+        {
+            target[i] = null;
+        }
+
+        int assignCount = Mathf.Min(target.Length, uniqueTiles.Count);
+        for (int i = 0; i < assignCount; i++)
+        {
+            target[i] = uniqueTiles[i];
+        }
+
+        return assignCount;
+    }
+
+    private Tilemap FindTilemap(System.Func<string, bool> matcher)
+    {
+        foreach (Tilemap tilemap in _tilemaps)
+        {
+            if (matcher(tilemap.gameObject.name.ToLower()))
+            {
+                return tilemap;
+            }
+        }
+
+        return null;
+    }
+
+    private static List<TileBase> CollectUniqueTiles(Tilemap tilemap)
+    {
+        HashSet<TileBase> unique = new HashSet<TileBase>();
+        BoundsInt bounds = tilemap.cellBounds;
+
+        for (int y = bounds.yMin; y < bounds.yMax; y++)
+        {
+            for (int x = bounds.xMin; x < bounds.xMax; x++)
+            {
+                TileBase tile = tilemap.GetTile(new Vector3Int(x, y, 0));
+                if (tile != null)
+                {
+                    unique.Add(tile);
+                }
+            }
+        }
+
+        return new List<TileBase>(unique);
     }
 
     /// <summary>
@@ -148,6 +240,51 @@ public class TilemapDataProvider : MonoBehaviour
         }
 
         return mapMatrix;
+    }
+
+    public bool TryGetReferenceTilemap(out Tilemap tilemap)
+    {
+        InitializeTilemaps();
+        tilemap = _tilemaps.Count > 0 ? _tilemaps[0] : null;
+        return tilemap != null;
+    }
+
+    public Vector3 MatrixIndexToWorldCenter(int matrixX, int matrixY)
+    {
+        InitializeTilemaps();
+
+        if (!TryGetReferenceTilemap(out Tilemap tilemap))
+        {
+            return transform.position;
+        }
+
+        Vector3Int cell = new Vector3Int(_combinedBounds.xMin + matrixX, _combinedBounds.yMin + matrixY, 0);
+        return tilemap.GetCellCenterWorld(cell);
+    }
+
+    public bool TryWorldToMatrixIndex(Vector3 worldPosition, out Vector2Int matrixIndex)
+    {
+        InitializeTilemaps();
+        matrixIndex = default;
+
+        if (!_hasBounds || !TryGetReferenceTilemap(out Tilemap tilemap))
+        {
+            return false;
+        }
+
+        Vector3Int cell = tilemap.WorldToCell(worldPosition);
+        int x = cell.x - _combinedBounds.xMin;
+        int y = cell.y - _combinedBounds.yMin;
+        int width = _combinedBounds.size.x;
+        int height = _combinedBounds.size.y;
+
+        if (x < 0 || x >= width || y < 0 || y >= height)
+        {
+            return false;
+        }
+
+        matrixIndex = new Vector2Int(x, y);
+        return true;
     }
 
     public Bounds GetWorldBounds()

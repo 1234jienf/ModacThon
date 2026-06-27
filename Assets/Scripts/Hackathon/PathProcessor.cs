@@ -3,16 +3,6 @@ using System.IO;
 using System.Collections.Generic;
 
 [System.Serializable]
-public class InputMapData
-{
-    public int width;
-    public int height;
-    public int startX;
-    public int startY;
-    public List<string> mapGrid = new List<string>();
-}
-
-[System.Serializable]
 public class OutputPathData
 {
     public int width;
@@ -62,14 +52,7 @@ public class PathProcessor : MonoBehaviour
         int w = originalData.width;
         int h = originalData.height;
 
-        char[,] grid = new char[h, w];
-        for (int y = 0; y < h; y++)
-        {
-            for (int x = 0; x < w; x++)
-            {
-                grid[y, x] = originalData.mapGrid[y][x];
-            }
-        }
+        char[,] grid = BridgeMapJsonUtility.LoadGridFromJson(originalData);
 
         string folderPath = Path.Combine(projectRoot, "tmpOutput");
         if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
@@ -117,18 +100,17 @@ public class PathProcessor : MonoBehaviour
         }
 
         // 3. 변환이 완료된 그리드를 최종 BridgeMapData_Path.json 파일로 저장
+        BridgeMapJsonUtility.MarkBridgeEndpoints(grid);
+
         OutputPathData outputData = new OutputPathData();
         outputData.width = w;
         outputData.height = h;
         outputData.startX = originalData.startX;
         outputData.startY = originalData.startY;
 
-        for (int y = 0; y < h; y++)
-        {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            for (int x = 0; x < w; x++) sb.Append(grid[y, x]);
-            outputData.mapGrid.Add(sb.ToString());
-        }
+        List<string> outputRows = new List<string>();
+        BridgeMapJsonUtility.WriteGridRowsTopFirst(outputRows, grid);
+        outputData.mapGrid = outputRows;
 
         string outputPath = Path.Combine(folderPath, "BridgeMapData_Path.json");
         if (File.Exists(outputPath)) File.Delete(outputPath);
@@ -138,6 +120,20 @@ public class PathProcessor : MonoBehaviour
         SaveAfterMapAsImage(grid, w, h, folderPath);
 
         Debug.Log($"[가공 완료] 비교용 전/후 이미지 및 JSON 데이터 저장 완료! (경로: {folderPath})");
+
+        TriggerBridgePathRunners();
+    }
+
+    private void TriggerBridgePathRunners()
+    {
+        AutoPathRunner[] runners = FindObjectsOfType<AutoPathRunner>(true);
+        foreach (AutoPathRunner runner in runners)
+        {
+            if (runner.useBridgePathJson)
+            {
+                runner.StartRun();
+            }
+        }
     }
 
     // [신규 추가] 연산 전 원본 비교용 이미지 저장 메서드 (#: 검은색, .: 흰색, 기존 외곽선 P도 기본 노출)
@@ -165,7 +161,7 @@ public class PathProcessor : MonoBehaviour
                 else if (tile == 'P') targetColor = colorGate;
 
                 int pixelStartX = x * pointSize;
-                int pixelStartY = y * pointSize;
+                int pixelStartY = (h - 1 - y) * pointSize;
 
                 for (int py = 0; py < pointSize; py++)
                 {
@@ -211,7 +207,7 @@ public class PathProcessor : MonoBehaviour
                 else if (tile == 'G') targetColor = colorGround;
 
                 int pixelStartX = x * pointSize;
-                int pixelStartY = y * pointSize;
+                int pixelStartY = (h - 1 - y) * pointSize;
 
                 for (int py = 0; py < pointSize; py++)
                 {

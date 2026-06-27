@@ -19,7 +19,6 @@ except ImportError:
 OPENAI_ENDPOINT = "https://api.openai.com/v1/responses"
 DEFAULT_MODEL = os.environ.get("OPENAI_VISION_MODEL", "gpt-4o-mini")
 
-
 def load_dotenv(project_root: Path) -> None:
     env_path = project_root / ".env"
     if not env_path.exists():
