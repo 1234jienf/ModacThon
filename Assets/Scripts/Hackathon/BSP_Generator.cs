@@ -335,7 +335,7 @@ public class BSP_Generator : MonoBehaviour
         int maxY = Mathf.Max(gridStartY, gridEndY);
         for (int y = minY; y <= maxY; y++)
         {
-            for (int offset = -1; offset <= 1; offset++)
+            for (int offset = 0; offset <= 1; offset++)
             {
                 int tx = gridEndX + offset;
                 if (tx >= 0 && tx < w && y >= 0 && y < h) grid[y, tx] = '.';
