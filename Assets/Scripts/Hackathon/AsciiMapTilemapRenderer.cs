@@ -52,12 +52,16 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
     [Header("Images")]
     public string imageAssetFolder = "Assets/modak_image_test";
-    public string blendedTilesFolder = "HackathonAI/runs/20260627_224203/blended_tiles";
+    public string blendedTilesFolder = "HackathonAI/runs/20260627_222834/blended_tiles";
     public bool useBlendedTiles = true;
     public bool autoLoadSpritesFromAssetFolder = true;
     [Tooltip("Sprite 크기를 타일 셀 안에서 조금 키우거나 줄입니다. 1은 원본 크기입니다.")]
     public float tileSpriteScale = 1.05f;
     public bool dotMeansGrass = true;
+
+    [Range(0.01f, 0.5f)]
+    [Tooltip("map_A와 map_B가 섞이는 경계면의 두께(거리)입니다. 값이 클수록 넓은 범위가 확률적으로 섞입니다.")]
+    public float blending = 0.15f;
 
     [Header("Start / Goal")]
     public bool drawFloorUnderMarkers = true;
@@ -307,18 +311,68 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         }
     }
 
-    private static string GetBlendRatioName(int x, int y, int width, int height)
+    private string GetBlendRatioName(int x, int y, int width, int height)
     {
+        // 0.0(완전한 map_A) ~ 1.0(완전한 map_B) 사이의 선형 가중치 계산
         float xRatio = width <= 1 ? 0.5f : x / (float)(width - 1);
         float yRatio = height <= 1 ? 0.5f : y / (float)(height - 1);
         float mapBWeight = (xRatio + yRatio) * 0.5f;
 
-        if (mapBWeight < 0.38f)
-            return "a_70_b_30";
-        if (mapBWeight > 0.62f)
-            return "a_30_b_70";
+        // 두 개의 기준 분할점 (기존 분기점 기준)
+        float firstCenter = 0.38f;  // 70_30과 50_50의 경계점
+        float secondCenter = 0.62f; // 50_50과 30_70의 경계점
 
-        return "a_50_b_50";
+        // 난수 값 생성 (확률적 타일 선택용)
+        float randomVal = UnityEngine.Random.value;
+
+        // -------------------------------------------------------------
+        // 1. 첫 번째 분할점 영역 (a_70_b_30 vs a_50_b_50 섞기)
+        // -------------------------------------------------------------
+        if (mapBWeight < (firstCenter + secondCenter) * 0.5f)
+        {
+            float minBound = firstCenter - blending;
+            float maxBound = firstCenter + blending;
+
+            if (mapBWeight < minBound)
+            {
+                return "a_70_b_30";
+            }
+            else if (mapBWeight > maxBound)
+            {
+                return "a_50_b_50";
+            }
+            else
+            {
+                // minBound ~ maxBound 사이를 0~1로 정규화
+                float t = (mapBWeight - minBound) / (blending * 2f);
+                // t가 커질수록(오른쪽으로 갈수록) a_50_b_50 확률이 높아짐
+                return (randomVal < t) ? "a_50_b_50" : "a_70_b_30";
+            }
+        }
+        // -------------------------------------------------------------
+        // 2. 두 번째 분할점 영역 (a_50_b_50 vs a_30_b_70 섞기)
+        // -------------------------------------------------------------
+        else
+        {
+            float minBound = secondCenter - blending;
+            float maxBound = secondCenter + blending;
+
+            if (mapBWeight < minBound)
+            {
+                return "a_50_b_50";
+            }
+            else if (mapBWeight > maxBound)
+            {
+                return "a_30_b_70";
+            }
+            else
+            {
+                // minBound ~ maxBound 사이를 0~1로 정규화
+                float t = (mapBWeight - minBound) / (blending * 2f);
+                // t가 커질수록(오른쪽으로 갈수록) a_30_b_70 확률이 높아짐
+                return (randomVal < t) ? "a_30_b_70" : "a_50_b_50";
+            }
+        }
     }
 
     private static string GetDustSpriteKey(string[][] tokenRows, int row, int x)
@@ -370,29 +424,29 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
                token == "g_6";
     }
 
-    private void SetSpriteTile(Vector3Int cell, string spriteKey)
-    {
-        Tilemap outputTilemap = GetTilemapForSpriteKey(spriteKey);
-        if (outputTilemap == null)
-            return;
+    // private void SetSpriteTile(Vector3Int cell, string spriteKey)
+    // {
+    //     Tilemap outputTilemap = GetTilemapForSpriteKey(spriteKey);
+    //     if (outputTilemap == null)
+    //         return;
 
-        if (!_spriteLookup.TryGetValue(spriteKey, out Sprite sprite) || sprite == null)
-        {
-            sprite = LoadSpriteForKey(spriteKey);
-            if (sprite != null)
-            {
-                _spriteLookup[spriteKey] = sprite;
-            }
-            else
-            {
-                if (_missingSpriteWarnings.Add(spriteKey))
-                    Debug.LogWarning($"Sprite not found for ASCII tile token: {spriteKey}");
-                return;
-            }
-        }
+    //     if (!_spriteLookup.TryGetValue(spriteKey, out Sprite sprite) || sprite == null)
+    //     {
+    //         sprite = LoadSpriteForKey(spriteKey);
+    //         if (sprite != null)
+    //         {
+    //             _spriteLookup[spriteKey] = sprite;
+    //         }
+    //         else
+    //         {
+    //             if (_missingSpriteWarnings.Add(spriteKey))
+    //                 Debug.LogWarning($"Sprite not found for ASCII tile token: {spriteKey}");
+    //             return;
+    //         }
+    //     }
 
-        outputTilemap.SetTile(cell, GetOrCreateTile(spriteKey, sprite));
-    }
+    //     outputTilemap.SetTile(cell, GetOrCreateTile(spriteKey, sprite));
+    // }
 
     private Tilemap GetTilemapForSpriteKey(string spriteKey)
     {
@@ -523,10 +577,18 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
         return Matrix4x4.Scale(new Vector3(tileSpriteScale, tileSpriteScale, 1f));
     }
-
+    
+    private readonly Dictionary<string, string> _tileAssetPaths = new Dictionary<string, string>();
+    
     private void LoadSpriteLookup()
     {
-        RegisterSprite("stone_wall", "stone_wall.png");
+        RegisterTileAsset("stone_wall",         "Assets/modak_image_test/wall_middle.asset");
+        RegisterTileAsset("stone_wall_down",    "Assets/modak_image_test/wall_down.asset");
+        RegisterTileAsset("stone_wall_up",      "Assets/modak_image_test/wall_up.asset");
+        RegisterTileAsset("stone_wall_up",      "Assets/modak_image_test/stone_wall.asset");
+        RegisterTileAsset("stone_wall_up", "Assets/modak_image_test/stone_wall.asset");
+
+
         RegisterSprite("water", "water.png");
 
         RegisterSprite("g_0", "all_grass.png");
@@ -560,6 +622,64 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         RegisterSprite("s_4", "rightup_snow.png");
         RegisterSprite("s_5", "leftdown_snow.png");
         RegisterSprite("s_6", "leftup_snow.png");
+    }
+
+    private void RegisterTileAsset(string key, string assetPath)
+    {
+        if (!_tileAssetPaths.ContainsKey(key))
+        {
+            _tileAssetPaths[key] = assetPath;
+        }
+    }
+
+    private void SetSpriteTile(Vector3Int cell, string spriteKey)
+    {
+        Tilemap outputTilemap = GetTilemapForSpriteKey(spriteKey);
+        if (outputTilemap == null)
+            return;
+
+        // 1. 이미 빌드된 타일 캐시에 있는지 확인
+        if (_runtimeTiles.TryGetValue(spriteKey, out TileBase cachedTile) && cachedTile != null)
+        {
+            outputTilemap.SetTile(cell, cachedTile);
+            return;
+        }
+
+#if UNITY_EDITOR
+        // 2. 등록된 전용 고유 Tile 에셋(.asset) 경로가 있는지 확인 후 로드
+        if (autoLoadSpritesFromAssetFolder && _tileAssetPaths.TryGetValue(spriteKey, out string assetPath))
+        {
+            TileBase tileAsset = AssetDatabase.LoadAssetAtPath<TileBase>(assetPath);
+            if (tileAsset != null)
+            {
+                _runtimeTiles[spriteKey] = tileAsset; // 캐시에 저장
+                outputTilemap.SetTile(cell, tileAsset);
+                return;
+            }
+            else
+            {
+                Debug.LogError($"[.asset 로드 실패] 경로를 다시 확인하세요: {assetPath}");
+            }
+        }
+#endif
+
+        // 3. 기존의 스프라이트(PNG) 기반 타일 생성 흐름 (Fallback)
+        if (!_spriteLookup.TryGetValue(spriteKey, out Sprite sprite) || sprite == null)
+        {
+            sprite = LoadSpriteForKey(spriteKey);
+            if (sprite != null)
+            {
+                _spriteLookup[spriteKey] = sprite;
+            }
+            else
+            {
+                if (_missingSpriteWarnings.Add(spriteKey))
+                    Debug.LogWarning($"Tile 에셋 또는 Sprite를 찾을 수 없음: {spriteKey}");
+                return;
+            }
+        }
+
+        outputTilemap.SetTile(cell, GetOrCreateTile(spriteKey, sprite));
     }
 
     private Sprite LoadSpriteForKey(string spriteKey)
