@@ -200,7 +200,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         switch (token)
         {
             case "#":
-                return "stone_wall";
+                return GetWallDirectionalKey(tokenRows, row, x);
             case "w":
                 return "water";
             case ".":
@@ -284,6 +284,52 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         return string.Empty;
     }
 
+    private string GetWallDirectionalKey(string[][] tokenRows, int row, int x)
+    {
+        // 1. 십자 방향(상, 하, 좌, 우) 주변이 벽('#')인지 검사
+        // 텍스트 배열 특성상 row - 1 이 위쪽(Up), row + 1 이 아래쪽(Down)입니다.
+        bool wallUp = IsWallTokenAt(tokenRows, row - 1, x);
+        bool wallDown = IsWallTokenAt(tokenRows, row + 1, x);
+        bool wallLeft = IsWallTokenAt(tokenRows, row, x - 1);
+        bool wallRight = IsWallTokenAt(tokenRows, row, x + 1);
+
+        // 2. 바닥(최하단 경계선) 판정 로직
+        // 내 아래(row + 1)가 벽이 아니라면 내가 바로 바닥 경계선(Bottom)입니다.
+        if (!wallDown)
+        {
+            if (!wallLeft) return "stone_wall_left_bottom";
+            if (!wallRight) return "stone_wall_right_bottom";
+            return "stone_wall_down"; // 양옆에 벽이 있는 일반 바닥면은 down 에셋 활용
+        }
+
+        // 3. 바닥 바로 윗줄(Down) 판정 로직
+        // 내 아래의 아래(row + 2)가 벽이 아니라면, 내 아랫칸이 최하단(Bottom)이므로 나는 'Down' 레이어가 됩니다.
+        bool isDownLayer = !IsWallTokenAt(tokenRows, row + 2, x);
+        if (isDownLayer)
+        {
+            if (!wallLeft) return "stone_wall_left_down";
+            if (!wallRight) return "stone_wall_right_down";
+            return "stone_wall_down";
+        }
+
+        // 4. 천장/천장 모서리(Up) 판정 로직
+        // 내 위(row - 1)가 벽이 아니라면 내가 최상단 벽면입니다.
+        if (!wallUp)
+        {
+            if (!wallLeft) return "stone_wall_left_up";
+            if (!wallRight) return "stone_wall_right_up";
+            return "stone_wall_up";
+        }
+
+        // 5. 좌/우 외곽 벽면 판정 로직
+        // 상하로는 벽이 이어지는데 좌측이나 우측이 뚫려있을 때
+        if (!wallLeft) return "stone_wall_left";
+        if (!wallRight) return "stone_wall_right";
+
+        // 6. 기본값: 사방이 모두 벽으로 채워진 내부 영역
+        return "stone_wall";
+    }
+    
     private static string GetBlendDirectionFileStem(string spriteKey)
     {
         if (string.IsNullOrEmpty(spriteKey) || spriteKey.Length < 3)
@@ -582,11 +628,17 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
     
     private void LoadSpriteLookup()
     {
-        RegisterTileAsset("stone_wall",         "Assets/modak_image_test/wall_middle.asset");
-        RegisterTileAsset("stone_wall_down",    "Assets/modak_image_test/wall_down.asset");
-        RegisterTileAsset("stone_wall_up",      "Assets/modak_image_test/wall_up.asset");
-        RegisterTileAsset("stone_wall_up",      "Assets/modak_image_test/stone_wall.asset");
-        RegisterTileAsset("stone_wall_up", "Assets/modak_image_test/stone_wall.asset");
+        RegisterTileAsset("stone_wall",                 "Assets/modak_image_test/wall_middle.asset");
+        RegisterTileAsset("stone_wall_down",            "Assets/modak_image_test/wall_down.asset");
+        RegisterTileAsset("stone_wall_up",              "Assets/modak_image_test/wall_up.asset");
+        RegisterTileAsset("stone_wall_left",            "Assets/modak_image_test/wall_left.asset");
+        RegisterTileAsset("stone_wall_left_up",         "Assets/modak_image_test/wall_left_up.asset");
+        RegisterTileAsset("stone_wall_left_down",       "Assets/modak_image_test/wall_left_down.asset");
+        RegisterTileAsset("stone_wall_left_bottom",     "Assets/modak_image_test/wall_left_bottom.asset");
+        RegisterTileAsset("stone_wall_right",           "Assets/modak_image_test/wall_right.asset");
+        RegisterTileAsset("stone_wall_right_up",        "Assets/modak_image_test/wall_right_up.asset");
+        RegisterTileAsset("stone_wall_right_down",      "Assets/modak_image_test/wall_right_down.asset");
+        RegisterTileAsset("stone_wall_right_bottom",    "Assets/modak_image_test/wall_right_bottom.asset");
 
 
         RegisterSprite("water", "water.png");
