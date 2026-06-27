@@ -11,6 +11,7 @@ public class BridgeDifficultyController : MonoBehaviour
     [SerializeField] private BSP_Generator bspGenerator;
     [SerializeField] private PathProcessor pathProcessor;
     [SerializeField] private EnemyTilemapPlacer enemyPlacer;
+    [SerializeField] private AutoPathRunner pathRunner;
 
     public int DifficultyLevel => difficultyLevel;
     public BridgeDifficultyPreset ActivePreset { get; private set; }
@@ -24,6 +25,8 @@ public class BridgeDifficultyController : MonoBehaviour
             pathProcessor = GetComponent<PathProcessor>();
         if (enemyPlacer == null)
             enemyPlacer = FindObjectOfType<EnemyTilemapPlacer>();
+        if (pathRunner == null)
+            pathRunner = FindObjectOfType<AutoPathRunner>();
     }
 
     public void ApplyDifficulty(int level)
@@ -40,9 +43,13 @@ public class BridgeDifficultyController : MonoBehaviour
         if (enemyPlacer != null)
             enemyPlacer.ApplyDifficultySettings(ActivePreset);
 
+        if (pathRunner != null)
+            pathRunner.ApplyDifficultySettings(ActivePreset);
+
         Debug.Log(
             $"BridgeDifficulty L{ActivePreset.level}: rooms={ActivePreset.divideCount}, " +
             $"enemies={ActivePreset.enemyCount}, lakes={ActivePreset.maxLakeCoverage:P0}, " +
-            $"pathLakePatches={ActivePreset.pathAdjacentLakePatches}");
+            $"pathLakePatches={ActivePreset.pathAdjacentLakePatches}, " +
+            $"enemyBlock={ActivePreset.enemyBlockedRadius}, grassDetour={ActivePreset.grassDetourCost}");
     }
 }

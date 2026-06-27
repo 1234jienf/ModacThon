@@ -79,6 +79,9 @@ public class PathProcessor : MonoBehaviour
         maxLakeCoverage = preset.maxLakeCoverage;
         lakeMinDistanceFromPath = preset.lakeMinDistanceFromPath;
         pathAdjacentLakePatches = preset.pathAdjacentLakePatches;
+
+        if (BridgeGameSession.Instance != null && BridgeGameSession.Instance.UseFixedGenerationSeed)
+            lakeRandomSeed = BridgeGameSession.Instance.GenerationSeed + preset.level * 17;
     }
 
     [ContextMenu("방별 중심점 기반 펄린 패스 생성 및 이미지 저장")]
@@ -112,7 +115,10 @@ public class PathProcessor : MonoBehaviour
 
         // 1. 맵 안에서 '.'으로 구성된 독립된 방들의 구역(RectInt) 추출
         List<RectInt> detectedRooms = FindIndividualRooms(grid, w, h);
-        
+
+        if (BridgeGameSession.Instance != null && BridgeGameSession.Instance.UseFixedGenerationSeed)
+            Random.InitState(BridgeGameSession.Instance.GenerationSeed + 31);
+
         float seedX = Random.Range(0f, 5000f);
         float seedY = Random.Range(0f, 5000f);
 

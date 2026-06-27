@@ -96,7 +96,9 @@ public class AutoPathRunner : MonoBehaviour
     [Tooltip("path가 끊기면 grass(g) 등으로 우회 (A* 비용 높음)")]
     public bool allowGrassDetour = true;
     public float pathTileCost = 1f;
-    public float grassTileCost = 8f;
+    public float grassTileCost = 20f;
+
+    private bool _allowGrassDetourWhenBlocked = true;
 
     [Header("Enemy Avoidance")]
     public bool avoidGeneratedEnemies = true;
@@ -105,9 +107,9 @@ public class AutoPathRunner : MonoBehaviour
     [Tooltip("Play 직후 EnemyTilemapPlacer가 적을 깔 때까지 A* 시작을 잠깐 대기")]
     public bool waitForGeneratedEnemies = true;
     public float enemySpawnWaitTimeout = 2f;
-    public int enemyBlockedRadius = 0;
-    public int enemyAvoidanceRadius = 1;
-    public float enemyAvoidanceCost = 25f;
+    public int enemyBlockedRadius = 1;
+    public int enemyAvoidanceRadius = 2;
+    public float enemyAvoidanceCost = 60f;
     [Tooltip("이동 중 몬스터 위치가 바뀌면 주기적으로 A* 재계산")]
     public bool replanPathDuringRun = true;
     public float replanInterval = 0.75f;
@@ -130,6 +132,15 @@ public class AutoPathRunner : MonoBehaviour
     public PathRunLiveStats liveStats;
 
     public bool IsRunning => _runCoroutine != null;
+
+    public void ApplyDifficultySettings(BridgeDifficultyPreset preset)
+    {
+        enemyBlockedRadius = preset.enemyBlockedRadius;
+        enemyAvoidanceRadius = preset.enemyAvoidanceRadius;
+        enemyAvoidanceCost = preset.enemyAvoidanceCost;
+        grassTileCost = preset.grassDetourCost;
+        _allowGrassDetourWhenBlocked = preset.allowGrassDetourWhenBlocked;
+    }
 
     private Coroutine _runCoroutine;
     private SpriteRenderer _runnerRenderer;
@@ -569,7 +580,19 @@ public class AutoPathRunner : MonoBehaviour
             extraCosts = new Dictionary<Vector2Int, float>();
         }
 
-        return FindPathAStar(matrix, start, goal, true, false, pathTileCost, grassTileCost, blockedCells, extraCosts);
+        if (!useEnemyAvoidance)
+            return FindPathAStar(matrix, start, goal, true, false, pathTileCost, grassTileCost, blockedCells, extraCosts);
+
+        List<Vector2Int> pathOnlyRoute = FindPathAStar(
+            matrix, start, goal, true, false, pathTileCost, grassTileCost, blockedCells, extraCosts);
+        if (pathOnlyRoute != null && pathOnlyRoute.Count > 0)
+            return pathOnlyRoute;
+
+        if (!_allowGrassDetourWhenBlocked || !allowGrassDetour)
+            return null;
+
+        return FindPathAStar(
+            matrix, start, goal, false, true, pathTileCost, grassTileCost, blockedCells, extraCosts);
     }
 
     private static float MeasureBridgePathWorldDistance(InputMapData bridgeData, List<Vector2Int> path)

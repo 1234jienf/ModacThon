@@ -21,7 +21,7 @@ public class BridgeDifficultyComparisonUI : MonoBehaviour
         if (instance == null || instance.tableText == null)
             return;
 
-        instance.tableText.text = BridgeDifficultyResultsTracker.BuildUiTableText();
+        instance.tableText.text = BridgeDifficultyResultsTracker.BuildUiTableTextFromExportedCsv();
     }
 
     private void EnsureUi()

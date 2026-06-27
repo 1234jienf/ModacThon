@@ -41,6 +41,12 @@ public class EnemyTilemapPlacer : MonoBehaviour
         enemyCount = preset.enemyCount;
         mapBDifficultyWeight = preset.mapBDifficultyWeight;
         enemyRoamRadius = preset.enemyRoamRadius;
+
+        if (BridgeGameSession.Instance != null && BridgeGameSession.Instance.UseFixedGenerationSeed)
+        {
+            useRandomSeed = true;
+            randomSeed = BridgeGameSession.Instance.GenerationSeed + preset.level * 1000;
+        }
     }
 
     [Header("Sprites")]

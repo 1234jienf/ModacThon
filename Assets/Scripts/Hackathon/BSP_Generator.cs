@@ -95,6 +95,9 @@ public class BSP_Generator : MonoBehaviour
 
     private void GenerateBridgeMaps()
     {
+        if (BridgeGameSession.Instance != null && BridgeGameSession.Instance.UseFixedGenerationSeed)
+            Random.InitState(BridgeGameSession.Instance.GenerationSeed);
+
         leafNodes.Clear();
         actualRooms.Clear();
         MapManager.Instance.ClearMapData();

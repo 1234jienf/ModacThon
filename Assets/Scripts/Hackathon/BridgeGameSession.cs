@@ -7,9 +7,13 @@ public class BridgeGameSession : MonoBehaviour
 
     [SerializeField] private BSP_Generator bspGenerator;
     [SerializeField] private bool waitForLevelSelect = true;
+    [SerializeField] private bool useFixedGenerationSeed = true;
+    [SerializeField] private int generationSeed = 20260628;
 
     public bool IsStarted { get; private set; }
     public int SelectedLevel { get; private set; } = 1;
+    public bool UseFixedGenerationSeed => useFixedGenerationSeed;
+    public int GenerationSeed => generationSeed;
 
     private void Awake()
     {

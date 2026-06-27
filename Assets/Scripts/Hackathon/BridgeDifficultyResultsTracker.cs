@@ -15,6 +15,7 @@ public static class BridgeDifficultyResultsTracker
 {
     private static readonly PathRunReport[] ResultsByLevel = new PathRunReport[3];
     private const string CacheRelativePath = "HackathonAI/path_run_reports/difficulty_results_cache.json";
+    public const string ComparisonCsvRelativePath = "HackathonAI/path_run_reports/bridge_difficulty_comparison.csv";
 
     public static void LoadCachedResults()
     {
@@ -140,7 +141,161 @@ public static class BridgeDifficultyResultsTracker
         string csvPath = Path.Combine(directory, "bridge_difficulty_comparison.csv");
         File.WriteAllText(csvPath, BuildCsv(), Encoding.UTF8);
 
-        Debug.Log($"Bridge difficulty comparison exported:\n{markdownPath}\n{csvPath}");
+        string htmlPath = Path.Combine(directory, "bridge_difficulty_comparison.html");
+        File.WriteAllText(htmlPath, BuildHtmlTable(), Encoding.UTF8);
+
+        Debug.Log($"Bridge difficulty comparison exported:\n{markdownPath}\n{csvPath}\n{htmlPath}");
+    }
+
+    public static string BuildUiTableTextFromExportedCsv()
+    {
+        string csvPath = BridgeMapJsonUtility.GetProjectRelativePath(ComparisonCsvRelativePath);
+        if (!File.Exists(csvPath))
+            return BuildUiTableText();
+
+        return BuildUiTableTextFromCsv(File.ReadAllText(csvPath, Encoding.UTF8));
+    }
+
+    public static string BuildUiTableTextFromCsv(string csvText)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("<b>Difficulty Comparison</b>  <size=14><color=#aaaaaa>(from CSV)</color></size>");
+        sb.AppendLine();
+
+        string currentSection = string.Empty;
+        foreach (string rawLine in csvText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (rawLine.StartsWith("section,", StringComparison.Ordinal))
+                continue;
+
+            string[] parts = rawLine.Split(',');
+            if (parts.Length < 5)
+                continue;
+
+            string section = parts[0];
+            string metric = parts[1];
+            string l1 = DisplayCsvCell(parts[2]);
+            string l2 = DisplayCsvCell(parts[3]);
+            string l3 = DisplayCsvCell(parts[4]);
+
+            if (section != currentSection)
+            {
+                currentSection = section;
+                sb.AppendLine();
+                sb.AppendLine(section == "preset"
+                    ? "<size=16><b>Presets</b></size>"
+                    : "<size=16><b>Path Run Results</b></size>");
+                sb.AppendLine("Metric           L1      L2      L3");
+            }
+
+            sb.AppendLine($"{FormatMetricLabel(metric).PadRight(17)}{l1.PadLeft(8)}{l2.PadLeft(8)}{l3.PadLeft(8)}");
+        }
+
+        return sb.ToString();
+    }
+
+    public static string BuildHtmlTable()
+    {
+        string csv = BuildCsv();
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("<!DOCTYPE html>");
+        sb.AppendLine("<html lang=\"ko\"><head><meta charset=\"utf-8\"/>");
+        sb.AppendLine("<title>Bridge Difficulty Comparison</title>");
+        sb.AppendLine("<style>");
+        sb.AppendLine("body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:32px;background:#111;color:#eee;}");
+        sb.AppendLine("h1{font-size:24px;margin-bottom:8px;} h2{font-size:18px;margin-top:28px;color:#8fd3ff;}");
+        sb.AppendLine("table{border-collapse:collapse;width:100%;max-width:920px;margin-top:12px;}");
+        sb.AppendLine("th,td{border:1px solid #333;padding:10px 12px;text-align:right;}");
+        sb.AppendLine("th:first-child,td:first-child{text-align:left;}");
+        sb.AppendLine("th{background:#1d1d1d;} tr:nth-child(even){background:#171717;}");
+        sb.AppendLine(".note{margin-top:20px;color:#aaa;font-size:14px;line-height:1.6;}");
+        sb.AppendLine("</style></head><body>");
+        sb.AppendLine("<h1>Bridge Difficulty Comparison</h1>");
+
+        string currentSection = string.Empty;
+        bool headerWritten = false;
+        foreach (string rawLine in csv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (rawLine.StartsWith("section,", StringComparison.Ordinal))
+                continue;
+
+            string[] parts = rawLine.Split(',');
+            if (parts.Length < 5)
+                continue;
+
+            string section = parts[0];
+            if (section != currentSection)
+            {
+                if (headerWritten)
+                    sb.AppendLine("</tbody></table>");
+
+                currentSection = section;
+                headerWritten = true;
+                sb.AppendLine(section == "preset"
+                    ? "<h2>Map / Spawn Presets</h2>"
+                    : "<h2>Path Run Results (S → G)</h2>");
+                sb.AppendLine("<table><thead><tr><th>Metric</th><th>L1 Easy</th><th>L2 Normal</th><th>L3 Hard</th></tr></thead><tbody>");
+            }
+
+            sb.AppendLine(
+                $"<tr><td>{HtmlEscape(FormatMetricLabel(parts[1]))}</td>" +
+                $"<td>{HtmlEscape(DisplayCsvCell(parts[2]))}</td>" +
+                $"<td>{HtmlEscape(DisplayCsvCell(parts[3]))}</td>" +
+                $"<td>{HtmlEscape(DisplayCsvCell(parts[4]))}</td></tr>");
+        }
+
+        if (headerWritten)
+            sb.AppendLine("</tbody></table>");
+
+        sb.AppendLine("<div class=\"note\">");
+        sb.AppendLine("<div>Red line = baseline path-only A*</div>");
+        sb.AppendLine("<div>Cyan line = dynamic enemy-avoidance A*</div>");
+        sb.AppendLine("<div>Generated from bridge_difficulty_comparison.csv</div>");
+        sb.AppendLine("</div></body></html>");
+        return sb.ToString();
+    }
+
+    private static string FormatMetricLabel(string metric)
+    {
+        switch (metric)
+        {
+            case "divideCount": return "Rooms (BSP)";
+            case "enemyCount": return "Enemies";
+            case "maxLakeCoverage": return "Lake coverage";
+            case "pathAdjacentLakePatches": return "Path lake patches";
+            case "baseline_estimated_seconds": return "Baseline time (s)";
+            case "elapsed_seconds": return "Actual time (s)";
+            case "elapsed_delta_seconds": return "Time delta (s)";
+            case "baseline_world_distance": return "Baseline route";
+            case "world_distance": return "Actual route";
+            case "distance_delta": return "Route delta";
+            case "ground_tile_steps": return "Grass detours";
+            case "replan_count": return "Replans";
+            default: return metric;
+        }
+    }
+
+    private static string DisplayCsvCell(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value == "-")
+            return "-";
+
+        if (value == "0" || value == "0.00")
+            return "0.00";
+
+        return value;
+    }
+
+    private static string HtmlEscape(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        return value
+            .Replace("&", "&amp;")
+            .Replace("<", "&lt;")
+            .Replace(">", "&gt;")
+            .Replace("\"", "&quot;");
     }
 
     private static string BuildCsv()
