@@ -21,20 +21,43 @@ public static class BridgeMapJsonUtility
 {
     public static void WriteGridRowsTopFirst(List<string> mapGrid, char[,] grid)
     {
+        WriteTokenGridRowsTopFirst(mapGrid, grid, null);
+    }
+
+    public static void WriteTokenGridRowsTopFirst(List<string> mapGrid, char[,] grid, int[,] lakeAutotileIndices)
+    {
         mapGrid.Clear();
         int height = grid.GetLength(0);
         int width = grid.GetLength(1);
 
         for (int gridY = height - 1; gridY >= 0; gridY--)
         {
-            StringBuilder row = new StringBuilder(width);
+            StringBuilder row = new StringBuilder();
             for (int x = 0; x < width; x++)
             {
-                row.Append(grid[gridY, x]);
+                string token = GetExportToken(grid[gridY, x], gridY, x, lakeAutotileIndices);
+                row.Append(token);
             }
 
             mapGrid.Add(row.ToString());
         }
+    }
+
+    public static string GetExportToken(char cell, int y, int x, int[,] lakeAutotileIndices)
+    {
+        if (lakeAutotileIndices != null &&
+            y >= 0 && x >= 0 &&
+            y < lakeAutotileIndices.GetLength(0) &&
+            x < lakeAutotileIndices.GetLength(1))
+        {
+            int lakeIndex = lakeAutotileIndices[y, x];
+            if (lakeIndex >= 0 && lakeIndex <= 8)
+            {
+                return $"w_{lakeIndex}";
+            }
+        }
+
+        return cell.ToString();
     }
 
     public static char[,] LoadGridFromJson(InputMapData data)
@@ -46,14 +69,137 @@ public static class BridgeMapJsonUtility
         for (int row = 0; row < data.mapGrid.Count && row < height; row++)
         {
             int gridY = height - 1 - row;
-            string line = data.mapGrid[row] ?? string.Empty;
-            for (int x = 0; x < width && x < line.Length; x++)
+            string[] tokens = TokenizeMapRow(data.mapGrid[row]);
+            for (int x = 0; x < width && x < tokens.Length; x++)
             {
-                grid[gridY, x] = line[x];
+                grid[gridY, x] = TokenToPathCell(tokens[x]);
             }
         }
 
         return grid;
+    }
+
+    public static int[,] LoadLakeAutotileIndicesFromJson(InputMapData data)
+    {
+        int width = data.width;
+        int height = data.height;
+        int[,] lakeIndices = new int[height, width];
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                lakeIndices[y, x] = -1;
+            }
+        }
+
+        for (int row = 0; row < data.mapGrid.Count && row < height; row++)
+        {
+            int gridY = height - 1 - row;
+            string[] tokens = TokenizeMapRow(data.mapGrid[row]);
+            for (int x = 0; x < width && x < tokens.Length; x++)
+            {
+                if (TryParseLakeToken(tokens[x], out int lakeIndex))
+                {
+                    lakeIndices[gridY, x] = lakeIndex;
+                }
+            }
+        }
+
+        return lakeIndices;
+    }
+
+    public static bool TryParseLakeToken(string token, out int lakeIndex)
+    {
+        lakeIndex = -1;
+        if (string.IsNullOrEmpty(token))
+        {
+            return false;
+        }
+
+        if (token.Length == 1 && token[0] == 'w')
+        {
+            lakeIndex = 8;
+            return true;
+        }
+
+        if (!token.StartsWith("w_", System.StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (!int.TryParse(token.Substring(2), out lakeIndex))
+        {
+            return false;
+        }
+
+        return lakeIndex >= 0 && lakeIndex <= 8;
+    }
+
+    private static char TokenToPathCell(string token)
+    {
+        if (TryParseLakeToken(token, out _))
+        {
+            return BridgeLakePlacer.LakeBlockChar;
+        }
+
+        if (string.IsNullOrEmpty(token))
+        {
+            return '.';
+        }
+
+        return token[0];
+    }
+
+    private static string[] TokenizeMapRow(string row)
+    {
+        if (string.IsNullOrEmpty(row))
+        {
+            return new string[0];
+        }
+
+        if (row.Contains(","))
+        {
+            return row.Split(',');
+        }
+
+        List<string> tokens = new List<string>();
+        int index = 0;
+        while (index < row.Length)
+        {
+            string token = ReadMapToken(row, ref index);
+            if (!string.IsNullOrEmpty(token))
+            {
+                tokens.Add(token);
+            }
+        }
+
+        return tokens.ToArray();
+    }
+
+    private static string ReadMapToken(string row, ref int startIndex)
+    {
+        string[] knownTokens =
+        {
+            "d2_0", "d2_1", "d2_2", "d2_3", "d2_4", "d2_5", "d2_6",
+            "g_0", "g_1", "g_2", "g_3", "g_4", "g_5", "g_6",
+            "d_0", "d_1", "d_2", "d_3", "d_4", "d_5", "d_6",
+            "s_0", "s_1", "s_2", "s_3", "s_4", "s_5", "s_6",
+            "w_0", "w_1", "w_2", "w_3", "w_4", "w_5", "w_6", "w_7", "w_8"
+        };
+
+        foreach (string token in knownTokens)
+        {
+            if (startIndex + token.Length <= row.Length &&
+                row.Substring(startIndex, token.Length) == token)
+            {
+                startIndex += token.Length;
+                return token;
+            }
+        }
+
+        string single = row[startIndex].ToString();
+        startIndex++;
+        return single;
     }
 
     public static bool TryLoadFromFile(string relativePath, out InputMapData data, out char[,] grid)
@@ -187,6 +333,12 @@ public static class BridgeMapJsonUtility
     public static bool IsPathTile(char cell)
     {
         return cell == 'P' || cell == 'p' || cell == 'S' || cell == 'E';
+    }
+
+    public static bool IsBlockedCell(char cell)
+    {
+        cell = MapProfile.NormalizeCell(cell);
+        return cell == '#' || cell == 'w' || cell == 'W' || cell == 'O';
     }
 
     public static string GetProjectRelativePath(string relativePath)

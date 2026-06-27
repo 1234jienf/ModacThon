@@ -1,0 +1,15 @@
+{
+    "id": "normal",
+    "displayName": "Normal (L2)",
+    "divideCount": 3,
+    "minRoomSizeRatio": 0.5,
+    "maxRoomSizeRatio": 0.8999999761581421,
+    "minNodeSizeToDivide": 10,
+    "maxRoomConnections": 3,
+    "noiseScale": 0.25,
+    "noiseMagnitude": 1.7999999523162842,
+    "useRandomPathWidth": true,
+    "fixedPathWidth": 2,
+    "transitionBandCount": 3,
+    "mapBThemeAtRight": 0.6499999761581421
+}

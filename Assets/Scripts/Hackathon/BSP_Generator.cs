@@ -37,8 +37,11 @@ public class BridgeMapNode
 public class BSP_Generator : MonoBehaviour
 {
     [Header("=== 기준 맵 오브젝트 ===")]
-    [SerializeField] private GameObject map_A;
-    [SerializeField] private GameObject map_B;
+    [SerializeField] private GameObject map_A; 
+    [SerializeField] private GameObject map_B; 
+
+    public GameObject MapA => map_A;
+    public GameObject MapB => map_B;
 
     [Header("=== BSP 분할 설정 ===")]
     [SerializeField] private int divideCount = 3;
@@ -70,12 +73,19 @@ public class BSP_Generator : MonoBehaviour
             Debug.LogError("map_A 또는 map_B가 할당되지 않았습니다!");
             return;
         }
+
         GenerateBridgeMaps();
 
         PathProcessor pathProcessor = GetComponent<PathProcessor>();
         if (pathProcessor != null)
         {
             pathProcessor.ProcessRoomPaths();
+        }
+
+        BridgeLakePostProcessor lakePostProcessor = GetComponent<BridgeLakePostProcessor>();
+        if (lakePostProcessor != null && lakePostProcessor.runAfterPathGeneration)
+        {
+            lakePostProcessor.ProcessLakes();
         }
     }
 

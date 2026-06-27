@@ -35,6 +35,10 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
     public Tilemap groundTilemap;
     public Tilemap dirtTilemap;
     public Tilemap lakeTilemap;
+    [Tooltip("Field 1 (왼쪽) — lakeTiles[0..8]")]
+    public TilemapDataProvider lakeTileProvider;
+    [Tooltip("Field 3 (오른쪽) — lakeTiles[0..8]")]
+    public TilemapDataProvider lakeTileProviderB;
     public Tilemap wallTilemap;
     public Tilemap markerTilemap;
     public bool clearBeforeRender = false;
@@ -52,7 +56,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
     [Header("Images")]
     public string imageAssetFolder = "Assets/modak_image_test";
-    public string blendedTilesFolder = "HackathonAI/runs/20260627_224203/blended_tiles";
+    public string blendedTilesFolder = "HackathonAI/runs/20260627_234954/blended_tiles";
     public bool useBlendedTiles = true;
     public bool autoLoadSpritesFromAssetFolder = true;
     [Tooltip("Sprite 크기를 타일 셀 안에서 조금 키우거나 줄입니다. 1은 원본 크기입니다.")]
@@ -69,6 +73,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
     private readonly Dictionary<string, TileBase> _runtimeTiles = new Dictionary<string, TileBase>();
     private readonly Dictionary<string, Sprite> _spriteLookup = new Dictionary<string, Sprite>();
     private readonly HashSet<string> _missingSpriteWarnings = new HashSet<string>();
+    private int _renderedLakeCellCount;
     private const string SpawnRootName = "ASCII Map Spawned Objects";
 
     private void Start()
@@ -105,8 +110,11 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
             return;
         }
 
+        EnsureLakeTileProviders();
+        EnsureLakeDrawOrder();
         LoadSpriteLookup();
         _missingSpriteWarnings.Clear();
+        _renderedLakeCellCount = 0;
 
         if (clearBeforeRender)
             ClearOutputTilemaps();
@@ -135,7 +143,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         }
 
         RefreshOutputTilemaps();
-        Debug.Log($"Rendered ASCII map to Tilemap. Size: {width}x{height}");
+        Debug.Log($"Rendered ASCII map to Tilemap. Size: {width}x{height}, lakeCells={_renderedLakeCellCount}");
     }
 
     private void RenderToken(
@@ -154,6 +162,11 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         if (token == "S")
         {
             RenderMarker(cell, startSprite, startPrefab);
+            return;
+        }
+
+        if (TryRenderLakeToken(cell, token, x, width))
+        {
             return;
         }
 
@@ -190,6 +203,303 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
         }
     }
 
+    private bool TryRenderLakeToken(Vector3Int cell, string token, int gridX, int mapWidth)
+    {
+        if (!BridgeMapJsonUtility.TryParseLakeToken(token, out int lakeIndex))
+        {
+            return false;
+        }
+
+        return PaintLakeCell(cell, lakeIndex, gridX, mapWidth, countRender: true);
+    }
+
+    /// <summary>
+    /// JSON w_ 토큰 경로와 무관하게 lakeAutotileIndices를 Lake Tilemap에 직접 찍습니다.
+    /// </summary>
+    public int PaintLakeLayerFromIndices(InputMapData mapData, int[,] lakeAutotileIndices)
+    {
+        if (!renderLakeTiles || lakeTilemap == null || mapData == null || lakeAutotileIndices == null)
+        {
+            return 0;
+        }
+
+        EnsureLakeTileProviders();
+        EnsureLakeDrawOrder();
+
+        int height = lakeAutotileIndices.GetLength(0);
+        int width = lakeAutotileIndices.GetLength(1);
+        Vector3Int origin = GetOrigin(new AsciiTilemapJsonData
+        {
+            width = mapData.width,
+            height = mapData.height,
+            startX = mapData.startX,
+            startY = mapData.startY
+        });
+
+        int painted = 0;
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int lakeIndex = lakeAutotileIndices[y, x];
+                if (lakeIndex < 0)
+                {
+                    continue;
+                }
+
+                Vector3Int cell = origin + new Vector3Int(x, y, 0);
+                if (PaintLakeCell(cell, lakeIndex, x, width, countRender: false))
+                {
+                    painted++;
+                }
+            }
+        }
+
+        GetLayerTilemap(lakeTilemap).RefreshAllTiles();
+        return painted;
+    }
+
+    private bool PaintLakeCell(Vector3Int cell, int lakeIndex, int gridX, int mapWidth, bool countRender)
+    {
+        if (!renderLakeTiles)
+        {
+            return false;
+        }
+
+        Tilemap target = GetLayerTilemap(lakeTilemap);
+        if (target == null)
+        {
+            return false;
+        }
+
+        EnsureLakeTileProviders();
+        TileBase sourceTile = ResolveLakeTileForPosition(lakeIndex, gridX, mapWidth);
+        string tileKey = GetLakeTileCacheKey(lakeIndex, gridX, mapWidth);
+        Sprite lakeSprite = TileSpriteUtility.GetSprite(sourceTile);
+        if (lakeSprite != null)
+        {
+            target.SetTile(cell, GetOrCreateTile(tileKey, lakeSprite));
+            ClearDirtAt(cell);
+            if (countRender)
+            {
+                _renderedLakeCellCount++;
+            }
+
+            return true;
+        }
+
+        if (sourceTile != null)
+        {
+            target.SetTile(cell, sourceTile);
+            ClearDirtAt(cell);
+            if (countRender)
+            {
+                _renderedLakeCellCount++;
+            }
+
+            return true;
+        }
+
+        if (TrySetSpriteTile(cell, $"w_{lakeIndex}"))
+        {
+            ClearDirtAt(cell);
+            if (countRender)
+            {
+                _renderedLakeCellCount++;
+            }
+
+            return true;
+        }
+
+        if (_missingSpriteWarnings.Add("lake-tiles"))
+        {
+            Debug.LogWarning(
+                "Lake tile render failed. lakeTileProvider(Field1) / lakeTileProviderB(Field3) 확인.");
+        }
+
+        return false;
+    }
+
+    private static string GetLakeTileCacheKey(int lakeIndex, int gridX, int mapWidth)
+    {
+        float mapBWeight = GetMapBLakeWeight(gridX, mapWidth);
+        string side = mapBWeight >= 0.5f ? "b" : "a";
+        return $"w_{lakeIndex}_{side}";
+    }
+
+    private static float GetMapBLakeWeight(int gridX, int mapWidth)
+    {
+        if (mapWidth <= 1)
+        {
+            return 0.5f;
+        }
+
+        float xRatio = gridX / (float)(mapWidth - 1);
+        BridgeDifficultyPreset preset = BridgeDifficultySettings.ActivePreset;
+        float theme = preset != null ? preset.mapBThemeAtRight : 0.65f;
+        return Mathf.Clamp01(Mathf.Pow(xRatio, Mathf.Lerp(1.1f, 0.45f, theme)));
+    }
+
+    private TileBase ResolveLakeTileForPosition(int lakeIndex, int gridX, int mapWidth)
+    {
+        float mapBWeight = GetMapBLakeWeight(gridX, mapWidth);
+        TileBase tileA = GetLakeTileFromProvider(lakeTileProvider, lakeIndex);
+        TileBase tileB = GetLakeTileFromProvider(lakeTileProviderB, lakeIndex);
+
+        if (mapBWeight >= 0.62f)
+        {
+            return tileB ?? tileA;
+        }
+
+        if (mapBWeight <= 0.38f)
+        {
+            return tileA ?? tileB;
+        }
+
+        return mapBWeight >= 0.5f ? (tileB ?? tileA) : (tileA ?? tileB);
+    }
+
+    private static TileBase GetLakeTileFromProvider(TilemapDataProvider provider, int lakeIndex)
+    {
+        if (provider == null ||
+            provider.lakeTiles == null ||
+            lakeIndex < 0 ||
+            lakeIndex >= provider.lakeTiles.Length)
+        {
+            return null;
+        }
+
+        return provider.lakeTiles[lakeIndex];
+    }
+
+    private void EnsureLakeTileProviders()
+    {
+        ResolveLakeProvider(ref lakeTileProvider, "field 1", "map_a", "field1");
+        ResolveLakeProvider(ref lakeTileProviderB, "field 3", "map_b", "field3");
+
+        if (!HasUsableLakeTiles(lakeTileProvider))
+        {
+            lakeTileProvider = FindBestLakeProvider();
+        }
+
+        if (!HasUsableLakeTiles(lakeTileProviderB))
+        {
+            TilemapDataProvider alternate = FindBestLakeProvider();
+            if (alternate != null && alternate != lakeTileProvider)
+            {
+                lakeTileProviderB = alternate;
+            }
+        }
+    }
+
+    private void ResolveLakeProvider(ref TilemapDataProvider slot, params string[] nameHints)
+    {
+        if (HasUsableLakeTiles(slot))
+        {
+            return;
+        }
+
+        foreach (TilemapDataProvider provider in FindObjectsOfType<TilemapDataProvider>(true))
+        {
+            if (CountLakeTiles(provider) < 9)
+            {
+                provider.AutoFillBlendTilesFromTilemaps();
+            }
+
+            string name = provider.gameObject.name.ToLowerInvariant();
+            bool match = false;
+            foreach (string hint in nameHints)
+            {
+                if (name.Contains(hint))
+                {
+                    match = true;
+                    break;
+                }
+            }
+
+            if (match && CountLakeTiles(provider) > 0)
+            {
+                slot = provider;
+                return;
+            }
+        }
+    }
+
+    private TilemapDataProvider FindBestLakeProvider()
+    {
+        TilemapDataProvider best = null;
+        int bestScore = -1;
+        foreach (TilemapDataProvider provider in FindObjectsOfType<TilemapDataProvider>(true))
+        {
+            if (CountLakeTiles(provider) < 9)
+            {
+                provider.AutoFillBlendTilesFromTilemaps();
+            }
+
+            int score = CountLakeTiles(provider);
+            if (score > bestScore)
+            {
+                best = provider;
+                bestScore = score;
+            }
+        }
+
+        return bestScore > 0 ? best : null;
+    }
+
+    private void EnsureLakeDrawOrder()
+    {
+        if (lakeTilemap == null)
+        {
+            return;
+        }
+
+        TilemapRenderer renderer = lakeTilemap.GetComponent<TilemapRenderer>();
+        if (renderer != null && renderer.sortingOrder < 4)
+        {
+            renderer.sortingOrder = 4;
+        }
+    }
+
+    private static bool HasUsableLakeTiles(TilemapDataProvider provider)
+    {
+        return provider != null && CountLakeTiles(provider) > 0;
+    }
+
+    private static int CountLakeTiles(TilemapDataProvider provider)
+    {
+        if (provider == null || provider.lakeTiles == null)
+        {
+            return 0;
+        }
+
+        int count = 0;
+        for (int i = 0; i < provider.lakeTiles.Length; i++)
+        {
+            if (provider.lakeTiles[i] != null)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private TileBase ResolveLakeTile(int lakeIndex)
+    {
+        return ResolveLakeTileForPosition(lakeIndex, 0, 1);
+    }
+
+    private void ClearDirtAt(Vector3Int cell)
+    {
+        if (!renderDirtTiles || dirtTilemap == null)
+        {
+            return;
+        }
+
+        GetLayerTilemap(dirtTilemap).SetTile(cell, null);
+    }
+
     private string GetSpriteKey(string token, string[][] tokenRows, int row, int x, int cellY, int width, int height)
     {
         string baseKey;
@@ -199,6 +509,18 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
                 return "stone_wall";
             case "w":
                 return "water";
+            case "w_0":
+            case "w_1":
+            case "w_2":
+            case "w_3":
+            case "w_4":
+            case "w_5":
+            case "w_6":
+            case "w_7":
+            case "w_8":
+                return token;
+            case "O":
+                return "stone_wall";
             case ".":
                 baseKey = dotMeansGrass ? "g_0" : string.Empty;
                 break;
@@ -372,9 +694,16 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
     private void SetSpriteTile(Vector3Int cell, string spriteKey)
     {
+        TrySetSpriteTile(cell, spriteKey);
+    }
+
+    private bool TrySetSpriteTile(Vector3Int cell, string spriteKey)
+    {
         Tilemap outputTilemap = GetTilemapForSpriteKey(spriteKey);
         if (outputTilemap == null)
-            return;
+        {
+            return false;
+        }
 
         if (!_spriteLookup.TryGetValue(spriteKey, out Sprite sprite) || sprite == null)
         {
@@ -386,19 +715,23 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
             else
             {
                 if (_missingSpriteWarnings.Add(spriteKey))
+                {
                     Debug.LogWarning($"Sprite not found for ASCII tile token: {spriteKey}");
-                return;
+                }
+
+                return false;
             }
         }
 
         outputTilemap.SetTile(cell, GetOrCreateTile(spriteKey, sprite));
+        return true;
     }
 
     private Tilemap GetTilemapForSpriteKey(string spriteKey)
     {
         if (spriteKey == "stone_wall")
             return renderWallTiles ? GetLayerTilemap(wallTilemap) : null;
-        if (spriteKey == "water")
+        if (spriteKey == "water" || spriteKey.StartsWith("w_", System.StringComparison.Ordinal))
             return renderLakeTiles ? GetLayerTilemap(lakeTilemap) : null;
         if (spriteKey.StartsWith("path_", StringComparison.Ordinal) ||
             spriteKey.StartsWith("d_", StringComparison.Ordinal) ||
@@ -528,6 +861,10 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
     {
         RegisterSprite("stone_wall", "stone_wall.png");
         RegisterSprite("water", "water.png");
+        for (int i = 0; i < TileBlendLayouts.LakeTileCount; i++)
+        {
+            RegisterSprite($"w_{i}", $"water.png");
+        }
 
         RegisterSprite("g_0", "all_grass.png");
         RegisterSprite("g_1", "up_grass.png");
@@ -660,7 +997,26 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
 
         try
         {
-            return JsonUtility.FromJson<AsciiTilemapJsonData>(trimmed);
+            InputMapData listFormat = JsonUtility.FromJson<InputMapData>(trimmed);
+            if (listFormat != null && listFormat.mapGrid != null && listFormat.mapGrid.Count > 0)
+            {
+                return new AsciiTilemapJsonData
+                {
+                    width = listFormat.width,
+                    height = listFormat.height,
+                    startX = listFormat.startX,
+                    startY = listFormat.startY,
+                    mapGrid = listFormat.mapGrid.ToArray()
+                };
+            }
+
+            AsciiTilemapJsonData parsed = JsonUtility.FromJson<AsciiTilemapJsonData>(trimmed);
+            if (parsed != null && parsed.mapGrid != null && parsed.mapGrid.Length > 0)
+            {
+                return parsed;
+            }
+
+            return parsed;
         }
         catch (Exception exception)
         {
@@ -734,6 +1090,7 @@ public class AsciiMapTilemapRenderer : MonoBehaviour
             "g_0", "g_1", "g_2", "g_3", "g_4", "g_5", "g_6",
             "d_0", "d_1", "d_2", "d_3", "d_4", "d_5", "d_6",
             "s_0", "s_1", "s_2", "s_3", "s_4", "s_5", "s_6",
+            "w_0", "w_1", "w_2", "w_3", "w_4", "w_5", "w_6", "w_7", "w_8",
             "d2"
         };
 

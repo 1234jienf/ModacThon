@@ -345,7 +345,13 @@ public class AutoPathRunner : MonoBehaviour
         List<Vector2Int> path = FindPathAStar(pathMatrix, start, goal, true, false, pathTileCost, grassTileCost);
         if (path == null || path.Count == 0)
         {
-            latestReport = BuildFailureReport("Bridge map A→B path(P)가 끊겨 있습니다. PathProcessor 결과를 확인하세요.");
+            path = FindPathAStar(pathMatrix, start, goal, false, true, pathTileCost, grassTileCost);
+        }
+
+        if (path == null || path.Count == 0)
+        {
+            latestReport = BuildFailureReport(
+                "Bridge map A→B 경로가 끊겼습니다. obstacle 배치 후 우회 경로(P/G)를 확인하세요.");
             yield break;
         }
 
@@ -409,6 +415,12 @@ public class AutoPathRunner : MonoBehaviour
         if (marker == 'G' || marker == 'g')
         {
             groundSteps++;
+            return;
+        }
+
+        if (marker == 'w' || marker == 'O')
+        {
+            otherSteps++;
             return;
         }
 
@@ -900,7 +912,7 @@ public class AutoPathRunner : MonoBehaviour
 
     private static bool IsPathWalkableCell(char cell, bool pathOnly, bool allowGrass)
     {
-        if (cell == '#' || cell == 'w' || cell == 'O' || cell == ' ')
+        if (cell == '#' || cell == 'w' || cell == 'W' || cell == 'O' || cell == ' ')
         {
             return false;
         }

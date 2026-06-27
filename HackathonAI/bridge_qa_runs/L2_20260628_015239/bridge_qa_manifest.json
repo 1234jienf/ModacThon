@@ -1,0 +1,17 @@
+{
+    "created_at": "2026-06-28 01:52:39",
+    "difficulty_level": 2,
+    "difficulty_id": "normal",
+    "difficulty_name": "Normal (L2)",
+    "bridge_width": 369,
+    "bridge_height": 123,
+    "path_tile_count": 36,
+    "grass_tile_count": 0,
+    "dirt_tile_count": 0,
+    "snow_tile_count": 0,
+    "structure_json_path": "/Users/bjy/ModacThon/HackathonAI/bridge_qa_runs/L2_20260628_015239/BridgeMapData_Path.json",
+    "structure_png_path": "/Users/bjy/ModacThon/HackathonAI/bridge_qa_runs/L2_20260628_015239/BridgeMapData_Path.png",
+    "visual_ascii_path": "",
+    "visual_png_path": "",
+    "preset_json_path": "/Users/bjy/ModacThon/HackathonAI/bridge_qa_runs/L2_20260628_015239/difficulty_preset.json"
+}

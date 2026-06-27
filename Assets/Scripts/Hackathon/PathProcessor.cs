@@ -120,21 +120,9 @@ public class PathProcessor : MonoBehaviour
         SaveAfterMapAsImage(grid, w, h, folderPath);
 
         Debug.Log($"[가공 완료] 비교용 전/후 이미지 및 JSON 데이터 저장 완료! (경로: {folderPath})");
-
-        TriggerBridgePathRunners();
     }
 
-    private void TriggerBridgePathRunners()
-    {
-        AutoPathRunner[] runners = FindObjectsOfType<AutoPathRunner>(true);
-        foreach (AutoPathRunner runner in runners)
-        {
-            if (runner.useBridgePathJson)
-            {
-                runner.StartRun();
-            }
-        }
-    }
+    // PathProcessor는 길 생성만 담당. lake/플레이어 실행은 BridgeLakePostProcessor.
 
     // [신규 추가] 연산 전 원본 비교용 이미지 저장 메서드 (#: 검은색, .: 흰색, 기존 외곽선 P도 기본 노출)
     private void SaveBeforeMapAsImage(char[,] grid, int w, int h, string folderPath)
